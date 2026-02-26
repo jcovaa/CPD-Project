@@ -1,10 +1,9 @@
 # CPD Projects
 
-CPD Projects of group T&lt;m&gt;&lt;n&gt;G&lt;p&gt;&lt;q&gt;.
+CPD Projects of group T06G10.
 
 Group members:
 
-1. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
-2. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
-3. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
-4. &lt;first name&gt; &lt;family name&gt; (&lt;email address&gt;)
+1. Constança Ferreira (<up202306850@edu.fe.up.pt>)
+2. João Cova (<up202307756@edu.fe.up.pt>)
+3. Pedro Castro (<up202200044@edu.fe.up.pt>)
