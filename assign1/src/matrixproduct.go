@@ -64,23 +64,23 @@ func main() {
 	var lin, col int
 	var op int
 
-	fmt.Print("1. Multiplication\n2. Line Multiplication\n3. Block Multiplication\n0. Exit\nSelection?: ")
-	fmt.Scan(&op)
+	for {
+		fmt.Print("1. Multiplication\n2. Line Multiplication\n3. Block Multiplication\n0. Exit\nSelection?: ")
+		fmt.Scan(&op)
 
-	if op == 0 {
-		return
-	}
+		if op == 0 {
+			break
+		}
 
-	fmt.Print("Dimensions: lins=cols ? ")
-	fmt.Scan(&lin)
-	fmt.Scan(&col)
+		fmt.Print("Dimensions: lins=cols ? ")
+		fmt.Scan(&lin)
+		col = lin
 
-	switch op {
-	case 1:
-		OnMult(lin, col)
-	case 2:
-		OnMultLine(lin, col)
-	default:
-		return
+		switch op {
+		case 1:
+			OnMult(lin, col)
+		case 2:
+			OnMultLine(lin, col)
+		}
 	}
 }
