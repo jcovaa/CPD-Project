@@ -44,8 +44,8 @@ func OnMult(m_ar int, m_br int) {
 	}
 
 	// Calculate time
-	duration := time.Since(start)
-	fmt.Println("Time: ", duration)
+	duration := time.Since(start).Seconds()
+	fmt.Printf("Time: %3.3f seconds\n", duration)
 
 	fmt.Println("Result matrix: ")
 	for i := 0; i < 1; i++ {
