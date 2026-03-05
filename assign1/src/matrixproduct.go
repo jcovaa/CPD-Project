@@ -106,12 +106,63 @@ func OnMultLine(m_ar int, m_br int) {
 	fmt.Println()
 }
 
+func OnMultBlock(m_ar int, m_br int, bkSize int) {
+	var temp float64
+
+	pha := make([]float64, m_ar*m_ar)
+	phb := make([]float64, m_ar*m_ar)
+	phc := make([]float64, m_ar*m_ar)
+
+	for i := 0; i < m_ar; i++ {
+		for j := 0; j < m_ar; j++ {
+			pha[i*m_ar+j] = 1.0
+		}
+	}
+
+	for i := 0; i < m_br; i++ {
+		for j := 0; j < m_br; j++ {
+			phb[i*m_br+j] = float64(i + 1)
+		}
+	}
+
+	start := time.Now()
+
+	for a:=0; a<m_ar; a+=bkSize {
+		for b:=0; b<m_br; b+=bkSize {
+			for c:=0; c<m_ar; c+=bkSize {
+				
+				for i := a; i < a+bkSize; i++ {
+					for k := c; k < c+bkSize; k++ {
+						temp = pha[i*m_ar+k]
+						for j := b; j < b+bkSize; j++ {
+							phc[i*m_ar+j] += temp * phb[k*m_br+j]
+						}
+					}
+				}
+
+			}
+		}
+	}
+
+	// Calculate time
+	duration := time.Since(start).Seconds()
+	fmt.Printf("Time: %3.3f seconds\n", duration)
+
+	fmt.Println("Result matrix: ")
+	for i := 0; i < 1; i++ {
+		for j := 0; j < min(10, m_br); j++ {
+			fmt.Print(phc[j], " ")
+		}
+	}
+	fmt.Println()
+}
+
 func main() {
-	var lin, col int
+	var lin, col, bk int
 	var op int
 
 	for {
-		fmt.Print("1. Multiplication\n2. Line Multiplication\n0. Exit\nSelection?: ")
+		fmt.Print("1. Multiplication\n2. Line Multiplication\n3. Block Multiplication\n0. Exit\nSelection?: ")
 		fmt.Scan(&op)
 
 		if op == 0 {
@@ -127,6 +178,10 @@ func main() {
 			OnMult(lin, col)
 		case 2:
 			OnMultLine(lin, col)
+		case 3:
+			fmt.Print("Block Size? ")
+			fmt.Scan(&bk)
+			OnMultBlock(lin,col,bk)
 		}
 	}
 }
