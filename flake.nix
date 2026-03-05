@@ -27,6 +27,9 @@
             gotools
 
             perf
+
+            python312
+            ruff
           ];
         };
       }
