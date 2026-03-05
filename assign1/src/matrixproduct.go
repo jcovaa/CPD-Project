@@ -106,16 +106,12 @@ func OnMultLine(m_ar int, m_br int) {
 	fmt.Println()
 }
 
-func OnMultBlock(m_ar int, m_br int, bkSize int) {
-
-}
-
 func main() {
-	var lin, col, blockSize int
+	var lin, col int
 	var op int
 
 	for {
-		fmt.Print("1. Multiplication\n2. Line Multiplication\n3. Block Multiplication\n0. Exit\nSelection?: ")
+		fmt.Print("1. Multiplication\n2. Line Multiplication\n0. Exit\nSelection?: ")
 		fmt.Scan(&op)
 
 		if op == 0 {
@@ -131,10 +127,6 @@ func main() {
 			OnMult(lin, col)
 		case 2:
 			OnMultLine(lin, col)
-		case 3:
-			fmt.Print("Block Size ? ")
-			fmt.Scan(&blockSize)
-			OnMultBlock(lin, col, blockSize)
 		}
 	}
 }
