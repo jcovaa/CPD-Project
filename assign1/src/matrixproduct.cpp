@@ -121,6 +121,64 @@ void OnMultLine(int m_ar, int m_br)
 // Block matrix multiplication
 void OnMultBlock(int m_ar, int m_br, int bkSize)
 {
+   SYSTEMTIME Time1, Time2;
+
+   char st[100];
+   double temp;
+   int i, j, k, a, b, c;
+
+   double *pha, *phb, *phc;
+
+   pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
+
+   for (i = 0; i < m_ar; i++)
+      for (j = 0; j < m_ar; j++)
+         pha[i * m_ar + j] = 1.0;
+
+   for (i = 0; i < m_br; i++)
+      for (j = 0; j < m_br; j++)
+         phb[i * m_br + j] = (double)(i + 1);
+
+   Time1 = clock();
+
+   // determine which block we are working on 
+   for (a=0; a<m_ar; a+=bkSize) {
+      for(b=0; b<m_br; b+=bkSize) {
+         for (c=0; c<m_ar; c+=bkSize) {
+
+            // create the c block by multiplying A and B 
+            for (i = a; i < a+bkSize; i++){
+               for (k = c; k < c+bkSize; k++)
+               {
+                  temp = pha[i * m_ar + k];
+                  for (j =b; j < b+bkSize; j++)
+                  {
+                     phc[i * m_ar + j] += temp * phb[k * m_br + j];
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   Time2 = clock();
+   snprintf(st, sizeof(st), "Time: %3.3f seconds\n",
+            (double)(Time2 - Time1) / CLOCKS_PER_SEC);
+   cout << st;
+
+   cout << "Result matrix: " << endl;
+   for (i = 0; i < 1; i++)
+   {
+      for (j = 0; j < min(10, m_br); j++)
+         cout << phc[j] << " ";
+   }
+   cout << endl;
+
+   free(pha);
+   free(phb);
+   free(phc);
 }
 
 int main(int argc, char *argv[])
