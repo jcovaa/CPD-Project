@@ -107,30 +107,37 @@ func OnMultLine(m_ar int, m_br int) {
 }
 
 func OnMultBlock(m_ar int, m_br int, bkSize int) {
+	// Variable declaration
 	var temp float64
 
+	// Creating matrix
+	// make() allocates and initializes memory
 	pha := make([]float64, m_ar*m_ar)
 	phb := make([]float64, m_ar*m_ar)
 	phc := make([]float64, m_ar*m_ar)
 
+	// Initializing the pha matrix with 1's
 	for i := 0; i < m_ar; i++ {
 		for j := 0; j < m_ar; j++ {
 			pha[i*m_ar+j] = 1.0
 		}
 	}
 
+	// Initializing the phb matrix
 	for i := 0; i < m_br; i++ {
 		for j := 0; j < m_br; j++ {
 			phb[i*m_br+j] = float64(i + 1)
 		}
 	}
 
+	// Starting clock
 	start := time.Now()
 
-	for a:=0; a<m_ar; a+=bkSize {
-		for b:=0; b<m_br; b+=bkSize {
-			for c:=0; c<m_ar; c+=bkSize {
-				
+	// Calculating the multiplication
+	for a := 0; a < m_ar; a += bkSize {
+		for b := 0; b < m_br; b += bkSize {
+			for c := 0; c < m_ar; c += bkSize {
+
 				for i := a; i < a+bkSize; i++ {
 					for k := c; k < c+bkSize; k++ {
 						temp = pha[i*m_ar+k]
@@ -181,7 +188,7 @@ func main() {
 		case 3:
 			fmt.Print("Block Size? ")
 			fmt.Scan(&bk)
-			OnMultBlock(lin,col,bk)
+			OnMultBlock(lin, col, bk)
 		}
 	}
 }

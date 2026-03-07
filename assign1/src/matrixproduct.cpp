@@ -143,17 +143,21 @@ void OnMultBlock(int m_ar, int m_br, int bkSize)
 
    Time1 = clock();
 
-   // determine which block we are working on 
-   for (a=0; a<m_ar; a+=bkSize) {
-      for(b=0; b<m_br; b+=bkSize) {
-         for (c=0; c<m_ar; c+=bkSize) {
+   // Determine which block we are working on
+   for (a = 0; a < m_ar; a += bkSize)
+   {
+      for (b = 0; b < m_br; b += bkSize)
+      {
+         for (c = 0; c < m_ar; c += bkSize)
+         {
 
-            // create the c block by multiplying A and B 
-            for (i = a; i < a+bkSize; i++){
-               for (k = c; k < c+bkSize; k++)
+            // Create the c block by multiplying A and B
+            for (i = a; i < a + bkSize; i++)
+            {
+               for (k = c; k < c + bkSize; k++)
                {
                   temp = pha[i * m_ar + k];
-                  for (j =b; j < b+bkSize; j++)
+                  for (j = b; j < b + bkSize; j++)
                   {
                      phc[i * m_ar + j] += temp * phb[k * m_br + j];
                   }
