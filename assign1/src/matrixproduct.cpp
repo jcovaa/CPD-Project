@@ -442,11 +442,31 @@ int main(int argc, char *argv[])
       switch (op)
       {
       case 1:
-         OnMultParallel1(lin, col);
-         break;
+      {
+         int alg;
+         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 2\nSelection?: ";
+         cin >> alg;
+         if (alg == 1)
+            OnMult(lin, col);
+         else if (alg == 2)
+            OnMultParallel1(lin, col);
+         else if (alg == 3)
+            OnMultParallel2(lin, col);
+      }
+      break;
       case 2:
-         OnMultLineParallel1(lin, col);
-         break;
+      {
+         int alg;
+         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 2\nSelection?: ";
+         cin >> alg;
+         if (alg == 1)
+            OnMultLine(lin, col);
+         else if (alg == 2)
+            OnMultLineParallel1(lin, col);
+         else if (alg == 3)
+            OnMultLineParallel2(lin, col);
+      }
+      break;
       case 3:
          cout << "Block Size? ";
          cin >> blockSize;
