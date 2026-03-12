@@ -1,7 +1,7 @@
 CXX = g++
 GO  = go
 
-CXXFLAGS = -Wall -O2
+CXXFLAGS = -Wall -O2 -fopenmp
 GOFLAGS  =
 
 SRC_DIR = src
