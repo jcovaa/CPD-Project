@@ -90,7 +90,7 @@ void OnMultParallel1(int m_ar, int m_br)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for
+   #pragma omp parallel for private(i, j, k, temp)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
@@ -145,20 +145,24 @@ void OnMultParallel2(int m_ar, int m_br)
       for (j = 0; j < m_br; j++)
          phb[i * m_br + j] = (double)(i + 1);
 
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
+
    Time1 = clock::now();
 
-   #pragma omp parallel
+   #pragma omp parallel private(i, j, temp)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
       {
          temp = 0;
-         #pragma omp for
+         #pragma omp for private(k)
          for (k = 0; k < m_ar; k++)
          {
             temp += pha[i * m_ar + k] * phb[k * m_br + j];
          }
-         phc[i * m_ar + j] = temp;
+         #pragma omp atomic
+         phc[i * m_ar + j] += temp;
       }
    }
 
