@@ -246,7 +246,6 @@ void OnMultLineParallel1(int m_ar, int m_br)
    chrono::time_point<clock> Time1, Time2;
 
    char st[100];
-   double temp;
    int i, k, j;
 
    double *pha, *phb, *phc;
@@ -263,17 +262,19 @@ void OnMultLineParallel1(int m_ar, int m_br)
       for (j = 0; j < m_br; j++)
          phb[i * m_br + j] = (double)(i + 1);
 
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
+
    Time1 = clock::now();
 
-   #pragma omp parallel for
+   #pragma omp parallel for private(i, k, j)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
       {
-         temp = pha[i * m_ar + k];
          for (j = 0; j < m_br; j++)
          {
-            phc[i * m_ar + j] += temp * phb[k * m_br + j];
+            phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
          }
       }
    }
@@ -303,7 +304,6 @@ void OnMultLineParallel2(int m_ar, int m_br)
    chrono::time_point<clock> Time1, Time2;
 
    char st[100];
-   double temp;
    int i, k, j;
 
    double *pha, *phb, *phc;
@@ -320,18 +320,20 @@ void OnMultLineParallel2(int m_ar, int m_br)
       for (j = 0; j < m_br; j++)
          phb[i * m_br + j] = (double)(i + 1);
 
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
+
    Time1 = clock::now();
 
-   #pragma omp parallel
+   #pragma omp parallel private(i, k)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
       {
-         temp = pha[i * m_ar + k];
-         #pragma omp for
+         #pragma omp for private(j)
          for (j = 0; j < m_br; j++)
          {
-            phc[i * m_ar + j] += temp * phb[k * m_br + j];
+            phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
          }
       }
    }
