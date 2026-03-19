@@ -150,12 +150,13 @@ void OnMultParallel2(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for collapse(2) private(i, j, k, temp) num_threads(n_threads)
+   #pragma omp parallel num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
       {
          temp = 0;
+         #pragma omp for
          for (k = 0; k < m_ar; k++)
          {
             temp += pha[i * m_ar + k] * phb[k * m_br + j];
@@ -298,6 +299,120 @@ void OnMultLineParallel1(int m_ar, int m_br, int n_threads)
    free(phc);
 }
 
+void OnMultLineParallel1Simd(int m_ar, int m_br, int n_threads)
+{
+   typedef chrono::high_resolution_clock clock;
+   chrono::time_point<clock> Time1, Time2;
+
+   char st[100];
+   int i, k, j;
+
+   double *pha, *phb, *phc;
+
+   pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
+
+   for (i = 0; i < m_ar; i++)
+      for (j = 0; j < m_ar; j++)
+         pha[i * m_ar + j] = 1.0;
+
+   for (i = 0; i < m_br; i++)
+      for (j = 0; j < m_br; j++)
+         phb[i * m_br + j] = (double)(i + 1);
+
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
+
+   Time1 = clock::now();
+
+   #pragma omp parallel for simd private(i, k, j) num_threads(n_threads)
+   for (i = 0; i < m_ar; i++)
+   {
+      for (k = 0; k < m_ar; k++)
+      {
+         for (j = 0; j < m_br; j++)
+         {
+            phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
+         }
+      }
+   }
+
+   Time2 = clock::now();
+   snprintf(st, sizeof(st), "Time: %3.3f seconds\n",
+            chrono::duration<double>(Time2 - Time1).count());
+   cout << st;
+
+   cout << "Result matrix: " << endl;
+   for (i = 0; i < 1; i++)
+   {
+      for (j = 0; j < min(10, m_br); j++)
+         cout << phc[j] << " ";
+   }
+   cout << endl;
+
+   free(pha);
+   free(phb);
+   free(phc);
+}
+
+void OnMultLineParallel1Collapse(int m_ar, int m_br, int n_threads)
+{
+   typedef chrono::high_resolution_clock clock;
+   chrono::time_point<clock> Time1, Time2;
+
+   char st[100];
+   int i, k, j;
+
+   double *pha, *phb, *phc;
+
+   pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
+   phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
+
+   for (i = 0; i < m_ar; i++)
+      for (j = 0; j < m_ar; j++)
+         pha[i * m_ar + j] = 1.0;
+
+   for (i = 0; i < m_br; i++)
+      for (j = 0; j < m_br; j++)
+         phb[i * m_br + j] = (double)(i + 1);
+
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
+
+   Time1 = clock::now();
+
+   #pragma omp parallel for collapse(2) private(i, j, k) num_threads(n_threads) reduction(+:phc[:m_ar*m_ar])
+   for (i = 0; i < m_ar; i++)
+   {
+      for (k = 0; k < m_ar; k++)
+      {
+         for (j = 0; j < m_br; j++)
+         {
+            phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
+         }
+      }
+   }
+
+   Time2 = clock::now();
+   snprintf(st, sizeof(st), "Time: %3.3f seconds\n",
+            chrono::duration<double>(Time2 - Time1).count());
+   cout << st;
+
+   cout << "Result matrix: " << endl;
+   for (i = 0; i < 1; i++)
+   {
+      for (j = 0; j < min(10, m_br); j++)
+         cout << phc[j] << " ";
+   }
+   cout << endl;
+
+   free(pha);
+   free(phb);
+   free(phc);
+}
+
 // Line-by-line matrix multiplication parallel version 2
 void OnMultLineParallel2(int m_ar, int m_br, int n_threads)
 {
@@ -326,12 +441,12 @@ void OnMultLineParallel2(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for private(i, k, j) num_threads(n_threads)
+   #pragma omp parallel private(i, k, j) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
       {
-         #pragma omp simd
+         #pragma omp for
          for (j = 0; j < m_br; j++)
          {
             phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
@@ -479,7 +594,7 @@ int main(int argc, char *argv[])
       case 2:
       {
          int alg;
-         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 2\nSelection?: ";
+         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 2\n4. Parallel 1 SIMD\n5. Parallel 1 Collapse\nSelection?: ";
          cin >> alg;
          if (alg == 1)
             OnMultLine(lin, col);
@@ -496,6 +611,20 @@ int main(int argc, char *argv[])
             cout << "Number of threads?: ";
             cin >> n_threads;
             OnMultLineParallel2(lin, col, n_threads);
+         }
+         else if (alg == 4)
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultLineParallel1Simd(lin, col, n_threads);
+         }
+         else if (alg == 5)
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultLineParallel1Collapse(lin, col, n_threads);
          }
       }
       break;
