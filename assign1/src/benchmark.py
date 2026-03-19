@@ -7,10 +7,6 @@ import os
 
 def run_matrix_benchmark(binary_path, size, option, block_size=None):
     input_sequence = [str(option), str(size)]
-    # Options 1 and 2 have a sub-menu asking for Normal/Parallel1/Parallel2
-    # We always select 1 (Normal/sequential) for these benchmarks
-    if option in (1, 2):
-        input_sequence.append("1")
     if option == 3:
         input_sequence.append(str(block_size))
     input_sequence.append("0")
@@ -92,4 +88,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
