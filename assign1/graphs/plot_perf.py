@@ -5,8 +5,8 @@ import numpy as np
 import os
 
 # ── Config ────────────────────────────────────────────────────────────────────
-INPUT_CSV   = "perf_results.csv"
-OUTPUT_DIR  = "perf_graphs"
+INPUT_CSV  = "perf_results.csv"
+OUTPUT_DIR = "perf_graphs"
 
 PERF_COUNTERS = [
     "cpu-cycles",
@@ -34,7 +34,7 @@ ALG_NAMES = {
     3: "Alg3 - Block",
 }
 
-COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+COLORS  = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 MARKERS = ["o", "s", "^", "D", "v"]
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -52,30 +52,27 @@ formatter = ticker.FuncFormatter(human_format)
 # ── Load & prepare data ───────────────────────────────────────────────────────
 df = pd.read_csv(INPUT_CSV)
 
-# Convert counter columns to numeric (N/A → NaN)
 for col in PERF_COUNTERS:
     if col in df.columns:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-# Keep BlockSize as string for labeling, replace NaN with "N/A"
 df["BlockSize"] = df["BlockSize"].fillna("N/A").astype(str)
 
-# Average across runs for each (Binary, Algorithm, Size, BlockSize)
+# Average across runs
 df_avg = (
-    df.groupby(["Binary", "Algorithm", "Size", "BlockSize"])[PERF_COUNTERS]
+    df.groupby(["Algorithm", "Size", "BlockSize"])[PERF_COUNTERS]
     .mean()
     .reset_index()
 )
 
-# ── Helper: build a label for a series ───────────────────────────────────────
-def series_label(binary, alg, block_size):
-    lang = "C++" if "cpp" in binary else "Go"
-    base = f"{lang} - {ALG_NAMES.get(alg, f'Alg{alg}')}"
+# ── Helper: series label ──────────────────────────────────────────────────────
+def series_label(alg, block_size):
+    base = ALG_NAMES.get(alg, f"Alg{alg}")
     if alg == 3 and block_size != "N/A":
         base += f" (block={block_size})"
     return base
 
-# ── Plot 1: Each counter vs Size — all algorithms/languages on one chart ──────
+# ── Plot 1: Each counter vs Size — all algorithms on one chart ────────────────
 print("Generating per-counter plots...")
 for counter in PERF_COUNTERS:
     if counter not in df_avg.columns:
@@ -84,9 +81,9 @@ for counter in PERF_COUNTERS:
     fig, ax = plt.subplots(figsize=(10, 6))
     color_idx = 0
 
-    for (binary, alg, block_size), group in df_avg.groupby(["Binary", "Algorithm", "BlockSize"]):
+    for (alg, block_size), group in df_avg.groupby(["Algorithm", "BlockSize"]):
         group = group.sort_values("Size")
-        label = series_label(binary, alg, block_size)
+        label = series_label(alg, block_size)
         ax.plot(
             group["Size"], group[counter],
             marker=MARKERS[color_idx % len(MARKERS)],
@@ -108,7 +105,7 @@ for counter in PERF_COUNTERS:
     plt.close()
     print(f"  Saved: {fname}")
 
-# ── Plot 2: Cache miss rates (misses / (misses+hits)) vs Size ─────────────────
+# ── Plot 2: Cache miss rate (%) vs Size ───────────────────────────────────────
 print("\nGenerating cache miss rate plots...")
 
 levels = [
@@ -124,12 +121,12 @@ for level_key, miss_col, hit_col, level_name in levels:
     fig, ax = plt.subplots(figsize=(10, 6))
     color_idx = 0
 
-    for (binary, alg, block_size), group in df_avg.groupby(["Binary", "Algorithm", "BlockSize"]):
+    for (alg, block_size), group in df_avg.groupby(["Algorithm", "BlockSize"]):
         group = group.sort_values("Size").copy()
         total = group[miss_col] + group[hit_col]
-        miss_rate = (group[miss_col] / total) * 100  # percentage
+        miss_rate = (group[miss_col] / total) * 100
 
-        label = series_label(binary, alg, block_size)
+        label = series_label(alg, block_size)
         ax.plot(
             group["Size"], miss_rate,
             marker=MARKERS[color_idx % len(MARKERS)],
@@ -151,31 +148,29 @@ for level_key, miss_col, hit_col, level_name in levels:
     plt.close()
     print(f"  Saved: {fname}")
 
-# ── Plot 3: All cache misses together for each algorithm (grouped bar) ─────────
+# ── Plot 3: L1/L2/L3 misses grouped bar — one chart per algorithm ─────────────
 print("\nGenerating cache miss comparison bar charts...")
 
-for (binary, alg, block_size), group in df_avg.groupby(["Binary", "Algorithm", "BlockSize"]):
-    miss_cols = [
-        "mem_load_retired.l1_miss",
-        "mem_load_retired.l2_miss",
-        "mem_load_retired.l3_miss",
-    ]
+miss_cols  = ["mem_load_retired.l1_miss", "mem_load_retired.l2_miss", "mem_load_retired.l3_miss"]
+miss_names = ["L1 Misses", "L2 Misses", "L3 Misses"]
+
+for (alg, block_size), group in df_avg.groupby(["Algorithm", "BlockSize"]):
     if not all(c in group.columns for c in miss_cols):
         continue
 
-    group = group.sort_values("Size")
-    sizes = group["Size"].astype(str).tolist()
-    x = np.arange(len(sizes))
-    width = 0.25
+    group  = group.sort_values("Size")
+    sizes  = group["Size"].astype(str).tolist()
+    x      = np.arange(len(sizes))
+    width  = 0.25
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    for i, (col, level) in enumerate(zip(miss_cols, ["L1", "L2", "L3"])):
-        ax.bar(x + i * width, group[col], width, label=f"{level} Misses",
+    for i, (col, name) in enumerate(zip(miss_cols, miss_names)):
+        ax.bar(x + i * width, group[col], width, label=name,
                color=COLORS[i], alpha=0.85)
 
+    label = series_label(alg, block_size)
     ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
     ax.set_ylabel("Miss Count", fontsize=12)
-    label = series_label(binary, alg, block_size)
     ax.set_title(f"Cache Misses per Level — {label}", fontsize=13)
     ax.set_xticks(x + width)
     ax.set_xticklabels(sizes)
@@ -183,8 +178,8 @@ for (binary, alg, block_size), group in df_avg.groupby(["Binary", "Algorithm", "
     ax.legend(fontsize=10)
     ax.grid(True, axis="y", linestyle="--", alpha=0.5)
 
-    safe_label = label.replace(" ", "_").replace("/", "_").replace("(", "").replace(")", "").replace("=","")
-    fname = os.path.join(OUTPUT_DIR, f"cache_misses_bar_{safe_label}.png")
+    safe = label.replace(" ", "_").replace("/", "_").replace("(","").replace(")","").replace("=","")
+    fname = os.path.join(OUTPUT_DIR, f"cache_misses_bar_{safe}.png")
     plt.tight_layout()
     plt.savefig(fname, dpi=150)
     plt.close()
