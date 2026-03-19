@@ -15,17 +15,24 @@ PERF_COUNTERS = [
 ]
 
 
-def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
+def run_perf_benchmark(binary_path, size, option, block_size=None, no_submenu=False, debug=False):
     input_sequence = [str(option), str(size)]
-    # Options 1 and 2 have a sub-menu asking for Normal/Parallel1/Parallel2
-    # We always select 1 (Normal/sequential) for perf measurements
-    if option in (1, 2):
+    # C++ binary has a sub-menu asking for Normal/Parallel1/Parallel2 (options 1 and 2)
+    # Go binary does NOT have this sub-menu — use --no_submenu flag for Go
+    if not no_submenu and option in (1, 2):
         input_sequence.append("1")
     if option == 3:
         input_sequence.append(str(block_size))
-    input_sequence.append("0")
+    # Send multiple 0s as safety net — Go's fmt.Scan on EOF keeps the last op value
+    # so the loop may not break on a single "0" if timing is off
+    input_sequence.extend(["0", "0", "0"])
 
     input_data = "\n".join(input_sequence) + "\n"
+
+    if debug:
+        print(f"\n--- INPUT SEQUENCE SENT ---")
+        print(repr(input_data))
+        print("--- END INPUT SEQUENCE ---\n")
 
     perf_cmd = [
         "perf", "stat",
@@ -39,10 +46,10 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
             input=input_data,
             capture_output=True,
             text=True,
+            timeout=600,   # 10 min safety timeout — prevents infinite hangs
             check=True
         )
 
-        # perf stat writes counter results to stderr
         perf_output = process.stderr
 
         if debug:
@@ -52,10 +59,6 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
 
         results = {}
         for counter in PERF_COUNTERS:
-            # perf output lines look like:
-            #   "    10,801,073,291      cpu_core/cpu-cycles/    (71.43%)"
-            #   "       <not counted>   cpu_atom/cpu-cycles/    (0.00%)"
-            # We match cpu_core prefix (ignores <not counted> cpu_atom lines)
             pattern = rf"([\d,]+)\s+cpu_core/{re.escape(counter)}/"
             match = re.search(pattern, perf_output)
             if match:
@@ -71,6 +74,10 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
 
         return results
 
+    except subprocess.TimeoutExpired:
+        print(f"ERROR: Process timed out. The binary may be waiting for input.")
+        print(f"Try running with --debug to inspect the input sequence being sent.")
+        return None
     except subprocess.CalledProcessError as e:
         print(f"Error executing perf: {e}")
         print(f"stderr: {e.stderr}")
@@ -82,7 +89,7 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Matrix Multiplication Perf Benchmarker")
-    parser.add_argument("binary", help="Path to the compiled C++ binary")
+    parser.add_argument("binary", help="Path to the binary (C++ or Go)")
     parser.add_argument("size", type=int, help="Matrix size (N x N)")
     parser.add_argument(
         "option",
@@ -93,7 +100,10 @@ def main():
     parser.add_argument("runs", type=int, help="Number of experiments to run")
     parser.add_argument("--block_size", type=int, help="Block size (for option 3)")
     parser.add_argument("--output", default="perf_results.csv", help="Output CSV file")
-    parser.add_argument("--debug", action="store_true", help="Print raw perf stderr for debugging")
+    parser.add_argument("--no_submenu", action="store_true",
+                        help="Use for Go binary (no version sub-menu for options 1 and 2)")
+    parser.add_argument("--debug", action="store_true",
+                        help="Print raw perf stderr and input sequence for debugging")
 
     args = parser.parse_args()
 
@@ -117,7 +127,8 @@ def main():
 
         for i in range(args.runs):
             results = run_perf_benchmark(
-                args.binary, args.size, args.option, args.block_size, args.debug
+                args.binary, args.size, args.option, args.block_size,
+                args.no_submenu, args.debug
             )
 
             if results:

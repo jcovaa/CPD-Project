@@ -1,4 +1,0 @@
-Binary,Algorithm,Size,BlockSize,Run_Index,cpu-cycles,mem_load_retired.l1_miss,mem_load_retired.l1_hit,mem_load_retired.l2_miss,mem_load_retired.l2_hit,mem_load_retired.l3_miss,mem_load_retired.l3_hit
-./bin/matrixproduct_cpp,3,4096,256,1,123003054541,2369419920,111461277476,641728721,1726203912,20622143,619248096
-./bin/matrixproduct_cpp,3,4096,256,2,119199559417,2342464758,112490497667,582799018,1755321428,12388450,567592465
-./bin/matrixproduct_cpp,3,4096,256,3,123471586376,2628244408,110520823302,649255144,1988865140,17511900,625571910
