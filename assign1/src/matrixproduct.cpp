@@ -150,19 +150,17 @@ void OnMultParallel2(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel private(i, j, temp) num_threads(n_threads)
+   #pragma omp parallel for collapse(2) private(i, j, k, temp) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
       {
          temp = 0;
-         #pragma omp for private(k)
          for (k = 0; k < m_ar; k++)
          {
             temp += pha[i * m_ar + k] * phb[k * m_br + j];
          }
-         #pragma omp atomic
-         phc[i * m_ar + j] += temp;
+         phc[i * m_ar + j] = temp;
       }
    }
 
@@ -206,6 +204,9 @@ void OnMultLine(int m_ar, int m_br)
    for (i = 0; i < m_br; i++)
       for (j = 0; j < m_br; j++)
          phb[i * m_br + j] = (double)(i + 1);
+
+   for (int x = 0; x < m_ar * m_ar; x++)
+      phc[x] = 0.0;
 
    Time1 = clock();
 
@@ -325,12 +326,12 @@ void OnMultLineParallel2(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel private(i, k) num_threads(n_threads)
+   #pragma omp parallel for private(i, k, j) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
       {
-         #pragma omp for private(j)
+         #pragma omp simd
          for (j = 0; j < m_br; j++)
          {
             phc[i * m_ar + j] += pha[i * m_ar + k] * phb[k * m_br + j];
