@@ -65,7 +65,7 @@ void OnMult(int m_ar, int m_br)
    free(phc);
 }
 
-void OnMultParallel1(int m_ar, int m_br)
+void OnMultParallel1(int m_ar, int m_br, int n_threads)
 {
    typedef chrono::high_resolution_clock clock;
    chrono::time_point<clock> Time1, Time2;
@@ -90,7 +90,7 @@ void OnMultParallel1(int m_ar, int m_br)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for private(i, j, k, temp)
+   #pragma omp parallel for private(i, j, k, temp) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
@@ -122,7 +122,7 @@ void OnMultParallel1(int m_ar, int m_br)
    free(phc);
 }
 
-void OnMultParallel2(int m_ar, int m_br)
+void OnMultParallel2(int m_ar, int m_br, int n_threads)
 {
    typedef chrono::high_resolution_clock clock;
    chrono::time_point<clock> Time1, Time2;
@@ -150,7 +150,7 @@ void OnMultParallel2(int m_ar, int m_br)
 
    Time1 = clock::now();
 
-   #pragma omp parallel private(i, j, temp)
+   #pragma omp parallel private(i, j, temp) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
@@ -240,7 +240,7 @@ void OnMultLine(int m_ar, int m_br)
 }
 
 // Line-by-line matrix multiplication parallel version 1
-void OnMultLineParallel1(int m_ar, int m_br)
+void OnMultLineParallel1(int m_ar, int m_br, int n_threads)
 {
    typedef chrono::high_resolution_clock clock;
    chrono::time_point<clock> Time1, Time2;
@@ -267,7 +267,7 @@ void OnMultLineParallel1(int m_ar, int m_br)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for private(i, k, j)
+   #pragma omp parallel for private(i, k, j) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
@@ -298,7 +298,7 @@ void OnMultLineParallel1(int m_ar, int m_br)
 }
 
 // Line-by-line matrix multiplication parallel version 2
-void OnMultLineParallel2(int m_ar, int m_br)
+void OnMultLineParallel2(int m_ar, int m_br, int n_threads)
 {
    typedef chrono::high_resolution_clock clock;
    chrono::time_point<clock> Time1, Time2;
@@ -325,7 +325,7 @@ void OnMultLineParallel2(int m_ar, int m_br)
 
    Time1 = clock::now();
 
-   #pragma omp parallel private(i, k)
+   #pragma omp parallel private(i, k) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
@@ -455,9 +455,19 @@ int main(int argc, char *argv[])
          if (alg == 1)
             OnMult(lin, col);
          else if (alg == 2)
-            OnMultParallel1(lin, col);
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultParallel1(lin, col, n_threads);
+         }
          else if (alg == 3)
-            OnMultParallel2(lin, col);
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultParallel2(lin, col, n_threads);
+         }
       }
       break;
       case 2:
@@ -468,9 +478,19 @@ int main(int argc, char *argv[])
          if (alg == 1)
             OnMultLine(lin, col);
          else if (alg == 2)
-            OnMultLineParallel1(lin, col);
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultLineParallel1(lin, col, n_threads);
+         }
          else if (alg == 3)
-            OnMultLineParallel2(lin, col);
+         {
+            int n_threads;
+            cout << "Number of threads?: ";
+            cin >> n_threads;
+            OnMultLineParallel2(lin, col, n_threads);
+         }
       }
       break;
       case 3:
