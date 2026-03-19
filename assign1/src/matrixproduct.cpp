@@ -383,7 +383,7 @@ void OnMultLineParallel1Collapse(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel for collapse(2) private(i, j, k) num_threads(n_threads) reduction(+:phc[:m_ar*m_ar])
+   #pragma omp parallel for collapse(2) private(i, j, k) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (k = 0; k < m_ar; k++)
@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
       case 2:
       {
          int alg;
-         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 2\n4. Parallel 1 SIMD\n5. Parallel 1 Collapse\nSelection?: ";
+         cout << "Choose version:\n1. Normal\n2. Parallel 1\n3. Parallel 1 SIMD\n4. Parallel 1 Collapse\n5. Parallel 2\nSelection?: ";
          cin >> alg;
          if (alg == 1)
             OnMultLine(lin, col);
@@ -610,21 +610,21 @@ int main(int argc, char *argv[])
             int n_threads;
             cout << "Number of threads?: ";
             cin >> n_threads;
-            OnMultLineParallel2(lin, col, n_threads);
+            OnMultLineParallel1Simd(lin, col, n_threads);
          }
          else if (alg == 4)
          {
             int n_threads;
             cout << "Number of threads?: ";
             cin >> n_threads;
-            OnMultLineParallel1Simd(lin, col, n_threads);
+            OnMultLineParallel1Collapse(lin, col, n_threads);
          }
          else if (alg == 5)
          {
             int n_threads;
             cout << "Number of threads?: ";
             cin >> n_threads;
-            OnMultLineParallel1Collapse(lin, col, n_threads);
+            OnMultLineParallel2(lin, col, n_threads);
          }
       }
       break;
