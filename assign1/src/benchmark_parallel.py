@@ -48,7 +48,7 @@ def main():
     parser.add_argument(
         "--sub",
         type=int,
-        choices=[2, 3],
+        choices=[2, 3, 4, 5],
         required=True,
         help="2-Parallel 1, 3-Parallel 2",
     )
