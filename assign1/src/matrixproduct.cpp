@@ -150,13 +150,13 @@ void OnMultParallel2(int m_ar, int m_br, int n_threads)
 
    Time1 = clock::now();
 
-   #pragma omp parallel num_threads(n_threads)
+   #pragma omp parallel private(i, j, temp) num_threads(n_threads)
    for (i = 0; i < m_ar; i++)
    {
       for (j = 0; j < m_br; j++)
       {
          temp = 0;
-         #pragma omp for
+         #pragma omp for private(k)
          for (k = 0; k < m_ar; k++)
          {
             temp += pha[i * m_ar + k] * phb[k * m_br + j];
