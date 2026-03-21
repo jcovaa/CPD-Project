@@ -1,6 +1,8 @@
-# Perf graphs
+# Graphs for perf counters
 
-## Each counter vs matrix size
+## Introduction
+
+This document contains graphs visualizing performance counter data for different algorithms.
 
 For each algorithm, we measured:
 - Size;
@@ -13,9 +15,9 @@ For each algorithm, we measured:
 - mem_load_retired.l3_miss;
 - mem_load_retired.l3_hit
 
-### Comparison of all counters vs matrix size
+### Counter vs Matrix Size
 
-All algorithms and languages on the same
+All algorithms on the same graph for each counter.
 
 ![CPU cycles comparisons](./cpu-cycles_vs_size.png)
 
@@ -31,7 +33,7 @@ All algorithms and languages on the same
 
 ![L3 misses](./mem_load_retired_l3_miss_vs_size.png)
 
-### Comparison of cache miss rate (%) vs matrix size
+### Cache Miss Rate (%) vs Matrix Size
 
 Computes `misses / (misses + hits) * 100` for each cache level.
 
@@ -41,7 +43,7 @@ Computes `misses / (misses + hits) * 100` for each cache level.
 
 ![L3 miss rate](./l3_miss_rate_vs_size.png)
 
-# Comparison of the caches misses vs Matrix size
+# Cache Misses per Cache Level
 
 These graphs are bar charts for L1, L2, and L3 cache misses for each algorithm. This way we can compare the relative weight of each cache level's misses for each algorithm.
 
