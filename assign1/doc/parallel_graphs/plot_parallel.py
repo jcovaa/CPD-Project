@@ -119,6 +119,40 @@ if scale_data is not None:
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, "scalability.png"))
 
+# Outer vs Inner loop comparison for both versions
+v1_suboption = load_and_group("results_parallel_version1.csv", by_suboption=True)
+v2_suboption = load_and_group("results_parallel_version2.csv", by_suboption=True)
+
+if v1_suboption is not None and v2_suboption is not None:
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    # Version 1 (ijk): outer (SubOption 2) vs inner (SubOption 3)
+    v1_outer = v1_suboption[v1_suboption["SubOption"] == 2].sort_values("Size")
+    v1_inner = v1_suboption[v1_suboption["SubOption"] == 3].sort_values("Size")
+
+    ax1.plot(v1_outer["Size"], v1_outer["GFlops"], color="#1f77b4", marker="o", label="Outer loop (parallel for)")
+    ax1.plot(v1_inner["Size"], v1_inner["GFlops"], color="#d62728", marker="x", label="Inner loop (parallel + inner for)")
+    ax1.set_title("Version 1 (ijk): Outer vs Inner Loop", fontweight="bold")
+    ax1.set_xlabel("Matrix Size (N)")
+    ax1.set_ylabel("GFlop/s")
+    ax1.legend()
+    ax1.grid(True, linestyle="--", alpha=0.6)
+
+    # Version 2 (ikj): outer (SubOption 2) vs inner (SubOption 5)
+    v2_outer = v2_suboption[v2_suboption["SubOption"] == 2].sort_values("Size")
+    v2_inner = v2_suboption[v2_suboption["SubOption"] == 5].sort_values("Size")
+
+    ax2.plot(v2_outer["Size"], v2_outer["GFlops"], color="#1f77b4", marker="o", label="Outer loop (parallel for)")
+    ax2.plot(v2_inner["Size"], v2_inner["GFlops"], color="#d62728", marker="x", label="Inner loop (parallel + inner for)")
+    ax2.set_title("Version 2 (ikj): Outer vs Inner Loop", fontweight="bold")
+    ax2.set_xlabel("Matrix Size (N)")
+    ax2.set_ylabel("GFlop/s")
+    ax2.legend()
+    ax2.grid(True, linestyle="--", alpha=0.6)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "outer_vs_inner_loop.png"))
+
 # Directives comparison for Version 2 (line-based)
 directives_data = load_and_group("results_parallel_version2.csv", by_suboption=True)
 

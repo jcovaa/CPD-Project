@@ -73,9 +73,9 @@ We parallelized both algorithms using OpenMP with 4 threads, testing two paralle
 ![Version Comparison](./doc/parallel_graphs/versions_comparison.png)
 
 **Key Findings:**
-
 - Version 2 (ikj) maintains ~4x higher throughput than Version 1 (ijk), consistent with single-core results.
-- Parallelizing the outer loop is essential, parallelizing the inner loop causes a lot of overhead.
+- Parallelizing the **outer loop** vastly outperforms parallelizing the **inner loop** for both versions.
+- Inner loop parallelization causes massive overhead due to repeated thread creation/synchronization.
 
 ### 2.2 Scalability Analysis
 
@@ -100,5 +100,3 @@ We evaluated different OpenMP directives: `parallel for`, `for simd`, `collapse(
 - `parallel for` and `for simd` perform best (15-19 GFlop/s).
 - `collapse(2)` adds scheduling overhead with minimal benefit.
 - `parallel + inner for` performs extremely bad due to repeated thread synchronization.
-
-For detailed graphs and analysis, see [parallel_graphs/README.md](./doc/parallel_graphs/README.md).

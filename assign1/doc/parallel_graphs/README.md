@@ -32,9 +32,26 @@ We compared two parallel implementations using 4 threads for matrix sizes rangin
 
 The data reveals a performance gap where **Version 2 (ikj)** consistently maintains a throughput nearly four times higher than **Version 1 (ijk)**.
 
-TIn Version 1 (ijk), the inner loop iterates over $j$, which corresponds to the columns of the second matrix. Because matrices are stored in row-major order, accessing the next column requires jumping across an entire row in memory. This pattern quickly exhausts the cache lines, leading to a high frequency of cache misses where the CPU must idle while waiting for data from the much slower RAM.
+In Version 1 (ijk), the inner loop iterates over $j$, which corresponds to the columns of the second matrix. Because matrices are stored in row-major order, accessing the next column requires jumping across an entire row in memory. This pattern quickly exhausts the cache lines, leading to a high frequency of cache misses where the CPU must idle while waiting for data from the much slower RAM.
 
 In contrast, Version 2 (ikj) reorders the loops so the inner loop iterates over $j$ while $k$ is fixed. This allows the algorithm to access the second matrix linearly. By reading contiguous memory addresses, the CPU can pre-fetch data into the L1/L2 caches effectively. Even with 4 threads competing for resources, Version 2's cache-friendly nature allows it to spend more cycles performing actual floating-point operations, resulting in the superior GFlop/s observed above.
+
+### Outer Loop vs Inner Loop Parallelization
+
+We compared two parallelization strategies for each version:
+- **Outer loop**: `#pragma omp parallel for` on the outermost loop
+- **Inner loop**: `#pragma omp parallel` with `#pragma omp for` on the innermost loop
+
+![Outer vs Inner Loop](./outer_vs_inner_loop.png)
+
+#### Conclusions
+
+For both versions, parallelizing the **outer loop** vastly outperforms parallelizing the **inner loop**:
+
+- **Version 1 (ijk)**: Outer loop achieves ~2-3 GFlop/s while inner loop drops to ~0.8-1.3 GFlop/s.
+- **Version 2 (ikj)**: Outer loop achieves ~12-17 GFlop/s while inner loop achieves only ~1-2 GFlop/s.
+
+The inner loop parallelization performs poorly because it creates and synchronizes threads repeatedly for every iteration of the outer loops. This overhead dominates the computation time, making the parallelization counterproductive.
 
 ## 2. Scalability Analysis
 
