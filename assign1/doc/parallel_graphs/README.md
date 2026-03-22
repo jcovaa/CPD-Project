@@ -49,3 +49,19 @@ The scalability results indicate that while increasing the thread count initiall
 As we increase the number of threads, we are not only increasing computational power but also the total pressure on the shared L3 cache and the memory controller. Once the 24 threads collectively demand more data than the memory bus can provide, the system becomes **memory-bound**.
 
 As seen in the Speedup graph, the widening gap between our **Measured Speedup** and the **Ideal Scaling** line suggests that the gains from parallelization are eventually offset by the overhead of thread synchronization and the hardware's inability to keep all cores saturated with data. At 24 threads, the "Efficiency" is at its lowest because the cores are spending a significant portion of their time stalled, waiting for the memory subsystem to fulfill data requests.
+
+## 3. OpenMP Directives Comparison
+
+We evaluated different OpenMP directives on **Version 2 (ikj)** using 4 threads across matrix sizes from 1024 to 3072.
+
+![Directives Comparison](./directives_comparison.png)
+
+### Conclusions
+
+The graph shows a clear performance hierarchy among the directives:
+
+- **`parallel for`** and **`for simd`** perform best, achieving 15-19 GFlop/s for smaller matrices. The `for simd` directive provides a slight edge at smaller sizes due to vectorization, but both converge as matrix size increases.
+
+- **`collapse(2)`** performs slightly worse (~15 GFlop/s peak). Collapsing the outer two loops increases scheduling overhead without significant benefit since the outer loop alone already provides enough parallelism.
+
+- **`parallel + inner for`** performs extremely poorly (~1-2 GFlop/s). Placing the `#pragma omp for` on the innermost loop creates and synchronizes threads repeatedly for each iteration of the outer loops, resulting in overhead.
