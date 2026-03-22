@@ -7,8 +7,8 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
-INPUT_CSV = os.path.join(REPO_ROOT, "doc", "results_linear.csv")
-OUTPUT_DIR = os.path.join(REPO_ROOT, "linear_graphs")
+INPUT_CSV = os.path.join(REPO_ROOT, "csvs", "results_linear.csv")
+OUTPUT_DIR = SCRIPT_DIR
 
 ALG_NAMES = {
     1: "Alg1 - Column (ijk)",

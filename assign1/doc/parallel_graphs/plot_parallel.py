@@ -5,8 +5,8 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
-INPUT_DIR = os.path.join(REPO_ROOT, "doc")
-OUTPUT_DIR = "parallel_graphs"
+INPUT_DIR = os.path.join(REPO_ROOT, "csvs")
+OUTPUT_DIR = SCRIPT_DIR
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 COLORS = {"V1": "#d62728", "V2": "#1f77b4", "Ideal": "#7f7f7f", "Speedup": "#2ca02c"}

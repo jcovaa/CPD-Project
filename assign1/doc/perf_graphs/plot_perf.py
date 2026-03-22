@@ -6,8 +6,8 @@ import os
 
 # ── Config ────────────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_CSV = os.path.join(BASE_DIR, "..", "doc", "results_perf.csv")
-OUTPUT_DIR = os.path.join(BASE_DIR, "perf_graphs")
+INPUT_CSV = os.path.join(BASE_DIR, "..", "csvs", "results_perf.csv")
+OUTPUT_DIR = BASE_DIR
 
 PERF_COUNTERS = [
     "cpu-cycles",

@@ -5,8 +5,8 @@ import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
-INPUT_DIR = os.path.join(REPO_ROOT, "doc")
-OUTPUT_DIR = "block_graphs"
+INPUT_DIR = os.path.join(REPO_ROOT, "csvs")
+OUTPUT_DIR = SCRIPT_DIR
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
