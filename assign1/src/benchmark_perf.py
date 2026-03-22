@@ -32,11 +32,7 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
         print(repr(input_data))
         print("--- END INPUT SEQUENCE ---\n")
 
-    perf_cmd = [
-        "perf", "stat",
-        "-e", ",".join(PERF_COUNTERS),
-        binary_path
-    ]
+    perf_cmd = ["perf", "stat", "-e", ",".join(PERF_COUNTERS), binary_path]
 
     try:
         process = subprocess.run(
@@ -45,7 +41,7 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
             capture_output=True,
             text=True,
             timeout=600,
-            check=True
+            check=True,
         )
 
         perf_output = process.stderr
@@ -86,7 +82,9 @@ def run_perf_benchmark(binary_path, size, option, block_size=None, debug=False):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Matrix Multiplication Perf Benchmarker (C++)")
+    parser = argparse.ArgumentParser(
+        description="Matrix Multiplication Perf Benchmarker (C++)"
+    )
     parser.add_argument("binary", help="Path to the C++ binary")
     parser.add_argument("size", type=int, help="Matrix size (N x N)")
     parser.add_argument(
@@ -96,10 +94,15 @@ def main():
         help="Algorithm: 1-Normal, 2-Line, 3-Block",
     )
     parser.add_argument("runs", type=int, help="Number of runs")
-    parser.add_argument("--block_size", type=int, help="Block size (required for option 3)")
+    parser.add_argument(
+        "--block_size", type=int, help="Block size (required for option 3)"
+    )
     parser.add_argument("--output", default="perf_results.csv", help="Output CSV file")
-    parser.add_argument("--debug", action="store_true",
-                        help="Print raw perf stderr and input sequence for debugging")
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print raw perf stderr and input sequence for debugging",
+    )
 
     args = parser.parse_args()
 
@@ -149,4 +152,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

@@ -1,6 +1,7 @@
 # Graphs for Block algorithms
 
 ## Introduction
+
 The **Block Matrix Multiplication** algorithm divides large matrixes into smaller sub-blocks and ensures that data stays within the CPU's high-speed cache for multiple operations, drastically reducing the need to access the slower Main Memory.
 
 ## Results

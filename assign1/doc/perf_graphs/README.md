@@ -13,6 +13,7 @@ The three sequential algorithms implemented in this project access memory in dif
 - Algorithm 3 (Block): divides the matrices into blocks that fit in cache, optimizing spatial locality and further reducing cache misses.
 
 For each algorithm, we measured:
+
 - Size;
 - BlockSize;
 - cpu-cycles;
@@ -51,7 +52,7 @@ Computes `misses / (misses + hits) * 100` for each cache level.
 
 ![L3 miss rate](./l3_miss_rate_vs_size.png)
 
-# Cache Misses per Cache Level
+## Cache Misses per Cache Level
 
 These graphs are bar charts for L1, L2, and L3 cache misses for each algorithm. This way we can compare the relative weight of each cache level's misses for each algorithm.
 

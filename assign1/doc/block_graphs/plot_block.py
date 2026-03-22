@@ -11,19 +11,25 @@ if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
 df_block = pd.read_csv(os.path.join(INPUT_DIR, "results_block.csv"))
-df_block['GFlops'] = (2 * df_block['Size']**3) / (df_block['Time_Seconds'] * 1e9)
-df_avg = df_block.groupby(['Size', 'BlockSize'])['GFlops'].mean().reset_index()
+df_block["GFlops"] = (2 * df_block["Size"] ** 3) / (df_block["Time_Seconds"] * 1e9)
+df_avg = df_block.groupby(["Size", "BlockSize"])["GFlops"].mean().reset_index()
 
 plt.figure(figsize=(10, 6))
-colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
-markers = ['o', 's', '^']
+colors = ["#1f77b4", "#ff7f0e", "#2ca02c"]
+markers = ["o", "s", "^"]
 
-for i, bs in enumerate(df_avg['BlockSize'].unique()):
-    subset = df_avg[df_avg['BlockSize'] == bs]
-    plt.plot(subset['Size'], subset['GFlops'], 
-             label=f'BlockSize {bs}', color=colors[i], marker=markers[i], linewidth=2)
+for i, bs in enumerate(df_avg["BlockSize"].unique()):
+    subset = df_avg[df_avg["BlockSize"] == bs]
+    plt.plot(
+        subset["Size"],
+        subset["GFlops"],
+        label=f"BlockSize {bs}",
+        color=colors[i],
+        marker=markers[i],
+        linewidth=2,
+    )
 
-plt.title("Effect of Block Size on Performance", fontweight='bold')
+plt.title("Effect of Block Size on Performance", fontweight="bold")
 plt.xlabel("Matrix Size (N)")
 plt.ylabel("Performance (GFlop/s)")
 plt.legend(title="Block Size", frameon=True)

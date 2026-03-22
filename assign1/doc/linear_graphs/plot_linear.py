@@ -19,8 +19,8 @@ ALG_NAMES = {
 SERIES_STYLE = {
     ("cpp", 1): {"color": "#1f77b4", "marker": "o", "label": "C++ - Alg1 Column (ijk)"},
     ("cpp", 2): {"color": "#ff7f0e", "marker": "s", "label": "C++ - Alg2 Line (ikj)"},
-    ("go",  1): {"color": "#2ca02c", "marker": "^", "label": "Go  - Alg1 Column (ijk)"},
-    ("go",  2): {"color": "#d62728", "marker": "D", "label": "Go  - Alg2 Line (ikj)"},
+    ("go", 1): {"color": "#2ca02c", "marker": "^", "label": "Go  - Alg1 Column (ijk)"},
+    ("go", 2): {"color": "#d62728", "marker": "D", "label": "Go  - Alg2 Line (ikj)"},
 }
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -36,9 +36,7 @@ df["Time_Seconds"] = pd.to_numeric(df["Time_Seconds"], errors="coerce")
 
 # Average across runs
 df_avg = (
-    df.groupby(["Language", "Algorithm", "Size"])["Time_Seconds"]
-    .mean()
-    .reset_index()
+    df.groupby(["Language", "Algorithm", "Size"])["Time_Seconds"].mean().reset_index()
 )
 
 # Compute GFlops: 2*N^3 / (T * 1e9)
@@ -51,9 +49,15 @@ fig, ax = plt.subplots(figsize=(10, 6))
 for (lang, alg), group in df_avg.groupby(["Language", "Algorithm"]):
     style = SERIES_STYLE[(lang, alg)]
     group = group.sort_values("Size")
-    ax.plot(group["Size"], group["Time_Seconds"],
-            color=style["color"], marker=style["marker"],
-            label=style["label"], linewidth=2, markersize=6)
+    ax.plot(
+        group["Size"],
+        group["Time_Seconds"],
+        color=style["color"],
+        marker=style["marker"],
+        label=style["label"],
+        linewidth=2,
+        markersize=6,
+    )
 
 ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
 ax.set_ylabel("Execution Time (seconds)", fontsize=12)
@@ -72,9 +76,15 @@ fig, ax = plt.subplots(figsize=(10, 6))
 for (lang, alg), group in df_avg.groupby(["Language", "Algorithm"]):
     style = SERIES_STYLE[(lang, alg)]
     group = group.sort_values("Size")
-    ax.plot(group["Size"], group["GFlops"],
-            color=style["color"], marker=style["marker"],
-            label=style["label"], linewidth=2, markersize=6)
+    ax.plot(
+        group["Size"],
+        group["GFlops"],
+        color=style["color"],
+        marker=style["marker"],
+        label=style["label"],
+        linewidth=2,
+        markersize=6,
+    )
 
 ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
 ax.set_ylabel("Performance (GFlop/s)", fontsize=12)
@@ -91,11 +101,19 @@ print("Generating per-language GFlops plots...")
 for lang in ["cpp", "go"]:
     fig, ax = plt.subplots(figsize=(10, 6))
     for alg in [1, 2]:
-        group = df_avg[(df_avg["Language"] == lang) & (df_avg["Algorithm"] == alg)].sort_values("Size")
+        group = df_avg[
+            (df_avg["Language"] == lang) & (df_avg["Algorithm"] == alg)
+        ].sort_values("Size")
         style = SERIES_STYLE[(lang, alg)]
-        ax.plot(group["Size"], group["GFlops"],
-                color=style["color"], marker=style["marker"],
-                label=ALG_NAMES[alg], linewidth=2, markersize=6)
+        ax.plot(
+            group["Size"],
+            group["GFlops"],
+            color=style["color"],
+            marker=style["marker"],
+            label=ALG_NAMES[alg],
+            linewidth=2,
+            markersize=6,
+        )
 
     lang_name = "C++" if lang == "cpp" else "Go"
     ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
@@ -120,11 +138,19 @@ for lang, color, marker in [("cpp", "#1f77b4", "o"), ("go", "#2ca02c", "^")]:
     speedup = alg1 / alg2
     speedup = speedup.sort_index()
     lang_name = "C++" if lang == "cpp" else "Go"
-    ax.plot(speedup.index, speedup.values,
-            color=color, marker=marker,
-            label=f"{lang_name} Speedup (Alg1 / Alg2)", linewidth=2, markersize=6)
+    ax.plot(
+        speedup.index,
+        speedup.values,
+        color=color,
+        marker=marker,
+        label=f"{lang_name} Speedup (Alg1 / Alg2)",
+        linewidth=2,
+        markersize=6,
+    )
 
-ax.axhline(y=1, color="gray", linestyle="--", linewidth=1, label="Speedup = 1 (no gain)")
+ax.axhline(
+    y=1, color="gray", linestyle="--", linewidth=1, label="Speedup = 1 (no gain)"
+)
 ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
 ax.set_ylabel("Speedup (T_alg1 / T_alg2)", fontsize=12)
 ax.set_title("Speedup of Line (ikj) over Column (ijk)", fontsize=14)
@@ -140,11 +166,19 @@ print("Generating C++ vs Go comparison plots...")
 for alg in [1, 2]:
     fig, ax = plt.subplots(figsize=(10, 6))
     for lang, color, marker in [("cpp", "#1f77b4", "o"), ("go", "#2ca02c", "^")]:
-        group = df_avg[(df_avg["Language"] == lang) & (df_avg["Algorithm"] == alg)].sort_values("Size")
+        group = df_avg[
+            (df_avg["Language"] == lang) & (df_avg["Algorithm"] == alg)
+        ].sort_values("Size")
         lang_name = "C++" if lang == "cpp" else "Go"
-        ax.plot(group["Size"], group["GFlops"],
-                color=color, marker=marker,
-                label=lang_name, linewidth=2, markersize=6)
+        ax.plot(
+            group["Size"],
+            group["GFlops"],
+            color=color,
+            marker=marker,
+            label=lang_name,
+            linewidth=2,
+            markersize=6,
+        )
 
     ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
     ax.set_ylabel("Performance (GFlop/s)", fontsize=12)

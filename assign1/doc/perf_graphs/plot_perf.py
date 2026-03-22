@@ -20,13 +20,13 @@ PERF_COUNTERS = [
 ]
 
 COUNTER_LABELS = {
-    "cpu-cycles":                   "CPU Cycles",
-    "mem_load_retired.l1_miss":     "L1 Misses",
-    "mem_load_retired.l1_hit":      "L1 Hits",
-    "mem_load_retired.l2_miss":     "L2 Misses",
-    "mem_load_retired.l2_hit":      "L2 Hits",
-    "mem_load_retired.l3_miss":     "L3 Misses",
-    "mem_load_retired.l3_hit":      "L3 Hits",
+    "cpu-cycles": "CPU Cycles",
+    "mem_load_retired.l1_miss": "L1 Misses",
+    "mem_load_retired.l1_hit": "L1 Hits",
+    "mem_load_retired.l2_miss": "L2 Misses",
+    "mem_load_retired.l2_hit": "L2 Hits",
+    "mem_load_retired.l3_miss": "L3 Misses",
+    "mem_load_retired.l3_hit": "L3 Hits",
 }
 
 ALG_NAMES = {
@@ -35,18 +35,24 @@ ALG_NAMES = {
     3: "Alg3 - Block",
 }
 
-COLORS  = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
+COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 MARKERS = ["o", "s", "^", "D", "v"]
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
 # ── Human-readable axis formatter ─────────────────────────────────────────────
 def human_format(num, pos):
-    if num >= 1e12: return f"{num/1e12:.1f}T"
-    if num >= 1e9:  return f"{num/1e9:.1f}B"
-    if num >= 1e6:  return f"{num/1e6:.1f}M"
-    if num >= 1e3:  return f"{num/1e3:.1f}K"
+    if num >= 1e12:
+        return f"{num / 1e12:.1f}T"
+    if num >= 1e9:
+        return f"{num / 1e9:.1f}B"
+    if num >= 1e6:
+        return f"{num / 1e6:.1f}M"
+    if num >= 1e3:
+        return f"{num / 1e3:.1f}K"
     return str(int(num))
+
 
 formatter = ticker.FuncFormatter(human_format)
 
@@ -61,10 +67,9 @@ df["BlockSize"] = df["BlockSize"].fillna("N/A").astype(str)
 
 # Average across runs
 df_avg = (
-    df.groupby(["Algorithm", "Size", "BlockSize"])[PERF_COUNTERS]
-    .mean()
-    .reset_index()
+    df.groupby(["Algorithm", "Size", "BlockSize"])[PERF_COUNTERS].mean().reset_index()
 )
+
 
 # ── Helper: series label ──────────────────────────────────────────────────────
 def series_label(alg, block_size):
@@ -72,6 +77,7 @@ def series_label(alg, block_size):
     if alg == 3 and block_size != "N/A":
         base += f" (block={block_size})"
     return base
+
 
 # ── Plot 1: Each counter vs Size — all algorithms on one chart ────────────────
 print("Generating per-counter plots...")
@@ -86,10 +92,13 @@ for counter in PERF_COUNTERS:
         group = group.sort_values("Size")
         label = series_label(alg, block_size)
         ax.plot(
-            group["Size"], group[counter],
+            group["Size"],
+            group[counter],
             marker=MARKERS[color_idx % len(MARKERS)],
             color=COLORS[color_idx % len(COLORS)],
-            label=label, linewidth=2, markersize=6
+            label=label,
+            linewidth=2,
+            markersize=6,
         )
         color_idx += 1
 
@@ -100,7 +109,7 @@ for counter in PERF_COUNTERS:
     ax.legend(fontsize=9)
     ax.grid(True, linestyle="--", alpha=0.5)
 
-    fname = os.path.join(OUTPUT_DIR, f"{counter.replace('.','_')}_vs_size.png")
+    fname = os.path.join(OUTPUT_DIR, f"{counter.replace('.', '_')}_vs_size.png")
     plt.tight_layout()
     plt.savefig(fname, dpi=150)
     plt.close()
@@ -129,10 +138,13 @@ for level_key, miss_col, hit_col, level_name in levels:
 
         label = series_label(alg, block_size)
         ax.plot(
-            group["Size"], miss_rate,
+            group["Size"],
+            miss_rate,
             marker=MARKERS[color_idx % len(MARKERS)],
             color=COLORS[color_idx % len(COLORS)],
-            label=label, linewidth=2, markersize=6
+            label=label,
+            linewidth=2,
+            markersize=6,
         )
         color_idx += 1
 
@@ -152,22 +164,27 @@ for level_key, miss_col, hit_col, level_name in levels:
 # ── Plot 3: L1/L2/L3 misses grouped bar — one chart per algorithm ─────────────
 print("\nGenerating cache miss comparison bar charts...")
 
-miss_cols  = ["mem_load_retired.l1_miss", "mem_load_retired.l2_miss", "mem_load_retired.l3_miss"]
+miss_cols = [
+    "mem_load_retired.l1_miss",
+    "mem_load_retired.l2_miss",
+    "mem_load_retired.l3_miss",
+]
 miss_names = ["L1 Misses", "L2 Misses", "L3 Misses"]
 
 for (alg, block_size), group in df_avg.groupby(["Algorithm", "BlockSize"]):
     if not all(c in group.columns for c in miss_cols):
         continue
 
-    group  = group.sort_values("Size")
-    sizes  = group["Size"].astype(str).tolist()
-    x      = np.arange(len(sizes))
-    width  = 0.25
+    group = group.sort_values("Size")
+    sizes = group["Size"].astype(str).tolist()
+    x = np.arange(len(sizes))
+    width = 0.25
 
     fig, ax = plt.subplots(figsize=(12, 6))
     for i, (col, name) in enumerate(zip(miss_cols, miss_names)):
-        ax.bar(x + i * width, group[col], width, label=name,
-               color=COLORS[i], alpha=0.85)
+        ax.bar(
+            x + i * width, group[col], width, label=name, color=COLORS[i], alpha=0.85
+        )
 
     label = series_label(alg, block_size)
     ax.set_xlabel("Matrix Size (N×N)", fontsize=12)
@@ -179,7 +196,13 @@ for (alg, block_size), group in df_avg.groupby(["Algorithm", "BlockSize"]):
     ax.legend(fontsize=10)
     ax.grid(True, axis="y", linestyle="--", alpha=0.5)
 
-    safe = label.replace(" ", "_").replace("/", "_").replace("(","").replace(")","").replace("=","")
+    safe = (
+        label.replace(" ", "_")
+        .replace("/", "_")
+        .replace("(", "")
+        .replace(")", "")
+        .replace("=", "")
+    )
     fname = os.path.join(OUTPUT_DIR, f"cache_misses_bar_{safe}.png")
     plt.tight_layout()
     plt.savefig(fname, dpi=150)
