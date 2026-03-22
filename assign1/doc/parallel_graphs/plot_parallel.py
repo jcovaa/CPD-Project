@@ -13,16 +13,15 @@ COLORS = {"V1": "#d62728", "V2": "#1f77b4", "Ideal": "#7f7f7f", "Speedup": "#2ca
 MARKERS = {"V1": "o", "V2": "s", "Scale": "D"}
 
 
-def load_and_group(filename):
+def load_and_group(filename, by_suboption=False):
     path = os.path.join(INPUT_DIR, filename)
     if not os.path.exists(path):
         return None
     df = pd.read_csv(path)
-    return (
-        df.groupby(["Algorithm", "Size", "Threads"])[["Time_Sec", "GFlops"]]
-        .mean()
-        .reset_index()
-    )
+    group_cols = ["Algorithm", "Size", "Threads"]
+    if by_suboption:
+        group_cols.append("SubOption")
+    return df.groupby(group_cols)[["Time_Sec", "GFlops"]].mean().reset_index()
 
 
 v1_data = load_and_group("results_parallel_version1.csv")
@@ -119,5 +118,46 @@ if scale_data is not None:
 
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, "scalability.png"))
+
+# Directives comparison for Version 2 (line-based)
+directives_data = load_and_group("results_parallel_version2.csv", by_suboption=True)
+
+if directives_data is not None:
+    DIRECTIVE_LABELS = {
+        2: "parallel for",
+        3: "for simd",
+        4: "collapse(2)",
+        5: "parallel + inner for",
+    }
+    DIRECTIVE_COLORS = {
+        2: "#1f77b4",
+        3: "#2ca02c",
+        4: "#ff7f0e",
+        5: "#d62728",
+    }
+    DIRECTIVE_MARKERS = {2: "o", 3: "s", 4: "^", 5: "x"}
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    for suboption in [2, 3, 4, 5]:
+        subset = directives_data[directives_data["SubOption"] == suboption].sort_values(
+            "Size"
+        )
+        ax.plot(
+            subset["Size"],
+            subset["GFlops"],
+            color=DIRECTIVE_COLORS[suboption],
+            marker=DIRECTIVE_MARKERS[suboption],
+            label=DIRECTIVE_LABELS[suboption],
+        )
+
+    ax.set_title("OpenMP Directives Comparison (4 Threads)", fontweight="bold")
+    ax.set_xlabel("Matrix Size (N)")
+    ax.set_ylabel("GFlop/s")
+    ax.legend()
+    ax.grid(True, linestyle="--", alpha=0.6)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "directives_comparison.png"))
 
 print(f"\nAll graphs saved to ./{OUTPUT_DIR}/")
