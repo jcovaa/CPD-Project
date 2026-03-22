@@ -8,8 +8,8 @@ For this type of project, we used `perf` command to collect performance counter 
 
 The three sequential algorithms implemented in this project access memory in different patterns:
 
-- Algorithm 1 (Column, _ijk_): accesses matrix B column-by-column, causing frequent cache misses.
-- Algorithm 2 (Row, _ikj_): accesses matrix B row-by-row, improving spatial locality and reducing cache misses.
+- Algorithm 1 (Column, _ijk_): accesses matrix column-by-column, causing frequent cache misses.
+- Algorithm 2 (Row, _ikj_): accesses matrix row-by-row, improving spatial locality and reducing cache misses.
 - Algorithm 3 (Block): divides the matrices into blocks that fit in cache, optimizing spatial locality and further reducing cache misses.
 
 For each algorithm, we measured:
