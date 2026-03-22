@@ -8,7 +8,7 @@ The **Block Matrix Multiplication** algorithm divides large matrixes into smalle
 
 The graph below compares three different block sizes (**128, 256, and 512**) to determine its effect on performance.
 
-![Block Analysis](.//block_analysis.png)
+![Block Analysis](./block_analysis.png)
 
 ### Conclusions
 
