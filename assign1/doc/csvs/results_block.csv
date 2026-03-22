@@ -26,10 +26,3 @@ bin/matrixproduct_cpp,3,8192,256,3,448.115
 bin/matrixproduct_cpp,3,8192,512,1,372.574
 bin/matrixproduct_cpp,3,8192,512,2,219.265
 bin/matrixproduct_cpp,3,8192,512,3,374.408
-bin/matrixproduct_cpp,3,10240,128,1,351.374
-bin/matrixproduct_cpp,3,10240,128,1,362.298
-bin/matrixproduct_cpp,3,10240,256,1,360.861
-bin/matrixproduct_cpp,3,10240,256,1,403.600
-bin/matrixproduct_cpp,3,10240,512,1,322.012
-bin/matrixproduct_cpp,3,10240,512,1,330.813
-
