@@ -28,7 +28,9 @@
 
             perf
 
-            python312
+            python314
+            python314Packages.pandas
+            python314Packages.matplotlib
             ruff
           ];
         };
