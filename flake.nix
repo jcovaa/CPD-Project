@@ -32,7 +32,13 @@
             python314Packages.pandas
             python314Packages.matplotlib
             ruff
+
+            jdk21
+            gradle_9
           ];
+          env = {
+            JAVA_HOME = "${pkgs.jdk21}/lib/openjdk";
+          };
         };
       }
     );
