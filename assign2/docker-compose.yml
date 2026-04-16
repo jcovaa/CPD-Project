@@ -1,0 +1,58 @@
+services:
+  # --- NVIDIA GPU SETUP ---
+  ollama-nvidia:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles: ["nvidia"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # --- AMD GPU SETUP ---
+  ollama-amd:
+    image: ollama/ollama:rocm
+    container_name: ollama
+    profiles: ["amd"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+
+  # --- VULKAN SUPPORT ---
+  ollama-vulkan:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles: ["vulkan"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_VULKAN=1
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+
+  # --- CPU ONLY ---
+  ollama-cpu:
+    image: ollama/ollama:latest
+    container_name: ollama
+    profiles: ["cpu"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  ollama:
