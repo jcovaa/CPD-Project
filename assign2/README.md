@@ -11,11 +11,11 @@
 Start the server:
 
 ```bash
-./gradlew :server:run --args="8888"
+./gradlew server:run --args="8888"
 ```
 
 Start the client:
 
 ```bash
-./gradlew :client:run --args="localhost 8888"
+./gradlew client:run --args="localhost 8888"
 ```
