@@ -1,0 +1,33 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# IDEs / editors
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+out/
+
+# Eclipse / JetBrains / STS
+.metadata
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+bin/
+
+# OS / temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+tmp/
+*.tmp
+*.swp
+*.swo
+*~
