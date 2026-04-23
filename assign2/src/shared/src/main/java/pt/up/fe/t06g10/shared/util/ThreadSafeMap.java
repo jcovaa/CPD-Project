@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ThreadSafeMap<J, K> {
-    final HashMap<J, K> map = new HashMap<>();
+    private final HashMap<J, K> map = new HashMap<>();
     private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     public K get(J key) {
@@ -20,6 +20,15 @@ public class ThreadSafeMap<J, K> {
         readWriteLock.writeLock().lock();
         try {
             return map.put(key, value);
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+    }
+
+    public K remove(J key) {
+        readWriteLock.writeLock().lock();
+        try {
+            return map.remove(key);
         } finally {
             readWriteLock.writeLock().unlock();
         }
