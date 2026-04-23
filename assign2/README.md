@@ -18,7 +18,7 @@ cd src
 Start the server:
 
 ```bash
-java -cp "server/build/libs/server.jar:shared/build/libs/shared.jar" pt.up.fe.t06g10.server.ChatServer 8888
+java -cp "server/build/libs/server.jar:shared/build/libs/shared.jar" pt.up.fe.t06g10.server.Main 8888
 ```
 
 Start the client:

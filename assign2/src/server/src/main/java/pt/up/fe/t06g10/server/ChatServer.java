@@ -1,8 +1,6 @@
 package pt.up.fe.t06g10.server;
 
-import pt.up.fe.t06g10.shared.Protocol;
-
-import java.io.*;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -11,11 +9,13 @@ import java.net.Socket;
  */
 public class ChatServer {
 
-    public static void main(String[] args) {
-        if (args.length < 1) return;
+    private final int port;
 
-        int port = Integer.parseInt(args[0]);
+    public ChatServer(int port) {
+        this.port = port;
+    }
 
+    public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
             System.out.println("Server is listening on port " + port);
@@ -24,40 +24,12 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected: " + socket.getInetAddress());
 
-                Thread.ofVirtual().start(() -> handleClient(socket));
+                Thread.ofVirtual().start(new ConnectionHandler(socket));
             }
 
         } catch (IOException ex) {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();
-        }
-    }
-
-    private static void handleClient(Socket socket) {
-        try (socket;
-             BufferedReader reader = new BufferedReader(
-                     new InputStreamReader(socket.getInputStream())
-             );
-             PrintWriter writer = new PrintWriter(
-                     new OutputStreamWriter(socket.getOutputStream()),
-                     true
-             )
-        ) {
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println("Client: " + line);
-
-                    if (Protocol.isValidClientCommand(line)) {
-                        writer.println("OK " + line);
-                    } else {
-                        writer.println(Protocol.BAD_REQUEST + " Invalid command: " + line);
-                    }
-                }
-            } catch (IOException ex) {
-                System.out.println("Client error: " + ex.getMessage());
-            }
-        } catch (IOException ignored) {
         }
     }
 }
