@@ -1,5 +1,6 @@
 package pt.up.fe.t06g10.shared.util;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -31,6 +32,15 @@ public class ThreadSafeMap<K, V> {
             return map.remove(key);
         } finally {
             readWriteLock.writeLock().unlock();
+        }
+    }
+
+    public Collection<V> values() {
+        readWriteLock.readLock().lock();
+        try {
+            return map.values();
+        }  finally {
+            readWriteLock.readLock().unlock();
         }
     }
 }
