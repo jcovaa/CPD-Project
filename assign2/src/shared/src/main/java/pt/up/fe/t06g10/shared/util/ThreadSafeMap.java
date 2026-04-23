@@ -34,13 +34,4 @@ public class ThreadSafeMap<K, V> {
             readWriteLock.writeLock().unlock();
         }
     }
-
-    public Collection<V> values() {
-        readWriteLock.readLock().lock();
-        try {
-            return map.values();
-        }  finally {
-            readWriteLock.readLock().unlock();
-        }
-    }
 }
