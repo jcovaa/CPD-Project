@@ -1,39 +1,67 @@
 package pt.up.fe.t06g10.client;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 /**
  * Simple TCP/IP socket client for the distributed chat system.
  */
+
 public class ChatClient {
+    private final String hostname;
+    private final int port;
+    private final ConsoleUI ui;
 
-    public static void main(String[] args) {
-        if (args.length < 2) return;
+    public ChatClient(String[] args) {
+        if (args.length < 2) {
+            System.err.println("Usage: ChatClient <hostname> <port>");
+            System.exit(1);
+        }
 
-        String hostname = args[0];
-        int port = Integer.parseInt(args[1]);
+        String host = args[0];
+        int p = 0;
 
+        try {
+            p = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid port: " + args[1]);
+            System.exit(1);
+        }
+
+        this.hostname = host;
+        this.port = p;
+        this.ui = new ConsoleUI();
+    }
+
+    public void start() {
         try (Socket socket = new Socket(hostname, port)) {
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(socket.getInputStream())
+            );
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            writer.println("LIST_ROOMS");
 
-            OutputStream output = socket.getOutputStream();
-            PrintWriter writer = new PrintWriter(output, true);
-            writer.println("Hello from client".toString());
+            Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
-            InputStream input = socket.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+            while (true) {
+                String line = ui.readCommand();
+                if (line == null) break;
 
-            String response = reader.readLine();
+                line = line.trim();
+                if (line.isEmpty()) continue;
 
-            System.out.println(response);
+                writer.println(line);
+                if (line.equalsIgnoreCase("QUIT")) break;
+            }
 
-        } catch (UnknownHostException ex) {
-
-            System.out.println("Server not found: " + ex.getMessage());
-
+            listener.join();
         } catch (IOException ex) {
-
-            System.out.println("I/O error: " + ex.getMessage());
+            ui.printError("Client error: " + ex.getMessage());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 }

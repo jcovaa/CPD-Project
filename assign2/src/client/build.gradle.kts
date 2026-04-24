@@ -8,5 +8,5 @@ dependencies {
 }
 
 application {
-    mainClass.set("pt.up.fe.t06g10.client.ChatClient")
+    mainClass.set("pt.up.fe.t06g10.client.Main")
 }
