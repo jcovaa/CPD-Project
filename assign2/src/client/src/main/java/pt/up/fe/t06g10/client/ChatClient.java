@@ -6,6 +6,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Simple TCP/IP socket client for the distributed chat system.
+ */
+
 public class ChatClient {
     private final String hostname;
     private final int port;
