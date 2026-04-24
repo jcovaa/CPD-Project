@@ -9,12 +9,14 @@ public class Protocol {
 
     public enum ClientCommand {
         AUTH("username", "password"),
+        TOKEN("token"),
         RECONNECT("token"),
         LIST_ROOMS(""),
         JOIN_ROOM("roomName"),
         CREATE_ROOM("roomName", "[prompt]"),
         LEAVE_ROOM(""),
         SEND("message"),
+        BOT("room", "prompt", "context"),
         QUIT("");
 
         public final String[] argNames;
