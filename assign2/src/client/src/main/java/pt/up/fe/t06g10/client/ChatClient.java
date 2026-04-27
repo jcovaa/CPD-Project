@@ -1,91 +1,65 @@
 package pt.up.fe.t06g10.client;
 
-import java.io.*;
-import java.net.*;
-import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+/**
+ * Simple TCP/IP socket client for the distributed chat system.
+ */
 
 public class ChatClient {
-    private static final String OK = "200";
-    private static final String UNAUTHORIZED = "401";
+    private final String hostname;
+    private final int port;
+    private final ConsoleUI ui;
 
-    public static void main(String[] args) {
+    public ChatClient(String[] args) {
         if (args.length < 2) {
-            System.out.println("Usage: ChatClient <hostname> <port>");
-            return;
+            System.err.println("Usage: ChatClient <hostname> <port>");
+            System.exit(1);
         }
 
-        String hostname = args[0];
-        int port = Integer.parseInt(args[1]);
-        Scanner scanner = new Scanner(System.in);
-        String token = null;
+        String host = args[0];
+        int p = 0;
 
+        try {
+            p = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid port: " + args[1]);
+            System.exit(1);
+        }
+
+        this.hostname = host;
+        this.port = p;
+        this.ui = new ConsoleUI();
+    }
+
+    public void start() {
         try (Socket socket = new Socket(hostname, port)) {
-            socket.setSoTimeout(30000);
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            writer.println("LIST_ROOMS");
+
+            Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
             while (true) {
-                System.out.println("\n=== Chat Menu ===");
-                System.out.println("1. REGISTER");
-                System.out.println("2. AUTH (login)");
-                if (token != null) {
-                    System.out.println("3. Use token to reconnect");
-                    System.out.println("4. EXIT");
-                } else {
-                    System.out.println("3. EXIT");
-                }
-                System.out.print("Choose: ");
+                String line = ui.readCommand();
+                if (line == null) break;
 
-                String choice = scanner.nextLine().trim();
+                line = line.trim();
+                if (line.isEmpty()) continue;
 
-                if (token != null && choice.equals("3")) {
-                    System.out.println("Reconnecting with token...");
-                    writer.println("TOKEN " + token);
-                    String response = reader.readLine();
-                    if (response.startsWith(OK)) {
-                        System.out.println("Reconnected as: " + response.substring(4));
-                        continue;
-                    } else {
-                        System.out.println("Token expired, please login again");
-                        token = null;
-                        continue;
-                    }
-                }
-
-                if (choice.equals("1") || choice.equalsIgnoreCase("REGISTER")) {
-                    System.out.print("Username: ");
-                    String username = scanner.nextLine().trim();
-                    System.out.print("Password: ");
-                    String password = scanner.nextLine();
-                    writer.println("REGISTER " + username + " " + password);
-                    System.out.println("Server: " + reader.readLine());
-                } 
-                else if (choice.equals("2") || choice.equalsIgnoreCase("AUTH")) {
-                    System.out.print("Username: ");
-                    String username = scanner.nextLine().trim();
-                    System.out.print("Password: ");
-                    String password = scanner.nextLine();
-                    writer.println("AUTH " + username + " " + password);
-                    String response = reader.readLine();
-                    System.out.println("Server: " + response);
-                    if (response.startsWith(OK)) {
-                        token = response.substring(4).trim();
-                        System.out.println("Logged in! Token: " + token);
-                    }
-                } 
-                else if (choice.equals("3") || choice.equals("4")) {
-                    System.out.println("Goodbye!");
-                    break;
-                } 
-                else {
-                    System.out.println("Invalid choice");
-                }
+                writer.println(line);
+                if (line.equalsIgnoreCase("QUIT")) break;
             }
 
-        } catch (UnknownHostException ex) {
-            System.out.println("Server not found: " + ex.getMessage());
+            listener.join();
         } catch (IOException ex) {
-            System.out.println("I/O error: " + ex.getMessage());
+            ui.printError("Client error: " + ex.getMessage());
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 }

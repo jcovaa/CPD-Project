@@ -6,6 +6,7 @@ public class Main {
             System.err.println("Usage: Main <hostname> <port>");
             System.exit(1);
         }
-        ChatClient.main(args);
+        ChatClient client = new ChatClient(args);
+        client.start();
     }
 }
