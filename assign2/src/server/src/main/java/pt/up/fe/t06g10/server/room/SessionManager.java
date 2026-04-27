@@ -49,9 +49,7 @@ public class SessionManager {
     }
 
     public Collection<UserSession> getUsersInRoom(String roomId) {
-        return activeSessions.values().stream()
-                .filter(s -> roomId.equals(s.getCurrentRoom()))
-                .collect(Collectors.toList());
+        return activeSessions.values().stream().filter(s -> roomId.equals(s.getCurrentRoom())).collect(Collectors.toList());
     }
 
     public int getActiveSessionCount() {

@@ -58,16 +58,7 @@ public class UserDatabase {
         return PasswordUtils.verify(password, record.hash, record.salt);
     }
 
-    private static class UserRecord {
-        final String username;
-        final String salt;
-        final String hash;
-
-        UserRecord(String username, String salt, String hash) {
-            this.username = username;
-            this.salt = salt;
-            this.hash = hash;
-        }
+    private record UserRecord(String username, String salt, String hash) {
     }
 
     public static class UserExistsException extends Exception {

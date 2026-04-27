@@ -25,8 +25,7 @@ public class AuthService {
             throw new AuthException("Invalid credentials");
         }
 
-        Session session = tokenService.createSession(username);
-        return session;
+        return tokenService.createSession(username);
     }
 
     public void registerUser(String username, String password) throws AuthException {
