@@ -34,8 +34,7 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected: " + socket.getInetAddress());
 
-                ConnectionHandler handler = new ConnectionHandler(socket, authService, tokenService, sessionManager);
-                Thread.startVirtualThread(handler::handle);
+                Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager));
             }
 
         } catch (IOException ex) {

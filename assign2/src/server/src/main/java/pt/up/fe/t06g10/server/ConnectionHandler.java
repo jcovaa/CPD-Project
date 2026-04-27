@@ -12,8 +12,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
-public class ConnectionHandler {
-    private static final String[] PRE_AUTH_COMMANDS = { "AUTH", "TOKEN", "RECONNECT", "REGISTER" };
+public class ConnectionHandler implements Runnable {
+    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER"};
 
     private final Socket socket;
     private final AuthService authService;
@@ -31,21 +31,19 @@ public class ConnectionHandler {
         this.sessionManager = sessionManager;
     }
 
-    public void handle() {
-        try (
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)
-        ) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.err.println("SERVER DEBUG: Received line: '" + line + "'");
-                    String[] parts = Protocol.parse(line);
-                    System.err.println("SERVER DEBUG: Parsed parts: " + java.util.Arrays.toString(parts));
-                    if (parts.length == 0) continue;
+    @Override
+    public void run() {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.err.println("SERVER DEBUG: Received line: '" + line + "'");
+                String[] parts = Protocol.parse(line);
+                System.err.println("SERVER DEBUG: Parsed parts: " + java.util.Arrays.toString(parts));
+                if (parts.length == 0) continue;
 
-                    String command = parts[0];
-                    String args = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
-                    System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
+                String command = parts[0];
+                String args = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
+                System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
 
                 if (!authenticated && !isPreAuthCommand(command)) {
                     writer.println(Protocol.UNAUTHORIZED + " Authentication required");
@@ -60,7 +58,10 @@ public class ConnectionHandler {
             System.out.println("Client error: " + e.getMessage());
         } finally {
             cleanup();
-            try { socket.close(); } catch (IOException ignored) {}
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+            }
         }
     }
 
@@ -76,57 +77,25 @@ public class ConnectionHandler {
 
     private String processCommand(String command, String args) {
         try {
-            switch (command.toUpperCase()) {
-                case "AUTH": {
-                    return handleAuth(args);
-                }
-
-                case "TOKEN": {
-                    return handleToken(args);
-                }
-
-                case "RECONNECT": {
-                    return handleReconnect(args);
-                }
-
-                case "REGISTER": {
+            return switch (command.toUpperCase()) {
+                case "AUTH" -> handleAuth(args);
+                case "TOKEN" -> handleToken(args);
+                case "RECONNECT" -> handleReconnect(args);
+                case "REGISTER" -> {
                     if (authenticated) {
-                        return Protocol.BAD_REQUEST + " Already authenticated";
+                        yield Protocol.BAD_REQUEST + " Already authenticated";
                     }
-                    return handleRegister(args);
+                    yield handleRegister(args);
                 }
-
-                case "LOGOUT": {
-                    return handleLogout(args);
-                }
-
-                case "LIST_ROOMS": {
-                    return handleListRooms();
-                }
-
-                case "CREATE_ROOM": {
-                    return handleCreateRoom(args);
-                }
-
-                case "JOIN_ROOM": {
-                    return handleJoinRoom(args);
-                }
-
-                case "LEAVE_ROOM": {
-                    return handleLeaveRoom();
-                }
-
-                case "SEND": {
-                    return handleSend(args);
-                }
-
-                case "HISTORY": {
-                    return handleHistory(args);
-                }
-
-                default:
-                    return Protocol.BAD_REQUEST + " Unknown command: " + command;
-            }
+                case "LOGOUT" -> handleLogout(args);
+                case "LIST_ROOMS" -> handleListRooms();
+                case "CREATE_ROOM" -> handleCreateRoom(args);
+                case "JOIN_ROOM" -> handleJoinRoom(args);
+                case "LEAVE_ROOM" -> handleLeaveRoom();
+                case "SEND" -> handleSend(args);
+                case "HISTORY" -> handleHistory(args);
+                default -> Protocol.BAD_REQUEST + " Unknown command: " + command;
+            };
         } catch (Exception e) {
             return Protocol.INTERNAL_ERROR + " " + e.getMessage();
         }
