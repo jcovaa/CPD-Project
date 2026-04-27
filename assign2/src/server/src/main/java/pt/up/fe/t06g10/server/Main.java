@@ -15,7 +15,6 @@ public class Main {
             System.exit(1);
         }
 
-        ChatServer server = new ChatServer(port);
-        server.start();
+        ChatServer.main(args);
     }
 }

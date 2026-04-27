@@ -36,13 +36,16 @@ public class ConnectionHandler {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)
         ) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = Protocol.parse(line);
-                if (parts.length == 0) continue;
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.err.println("SERVER DEBUG: Received line: '" + line + "'");
+                    String[] parts = Protocol.parse(line);
+                    System.err.println("SERVER DEBUG: Parsed parts: " + java.util.Arrays.toString(parts));
+                    if (parts.length == 0) continue;
 
-                String command = parts[0];
-                String args = parts.length > 1 ? parts[1] : "";
+                    String command = parts[0];
+                    String args = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
+                    System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
 
                 if (!authenticated && !isPreAuthCommand(command)) {
                     writer.println(Protocol.UNAUTHORIZED + " Authentication required");
