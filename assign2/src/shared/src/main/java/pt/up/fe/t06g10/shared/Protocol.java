@@ -6,17 +6,22 @@ public class Protocol {
     public static final String UNAUTHORIZED = "401";
     public static final String NOT_FOUND = "404";
     public static final String INTERNAL_ERROR = "500";
+    public static final String USER_EXISTS = "409";
 
     public enum ClientCommand {
         AUTH("username", "password"),
+        REGISTER("username", "password"),
         TOKEN("token"),
         RECONNECT("token"),
+        LOGOUT(""),
         LIST_ROOMS(""),
         JOIN_ROOM("roomName"),
         CREATE_ROOM("roomName", "[prompt]"),
         LEAVE_ROOM(""),
         SEND("message"),
+        MESSAGE("roomName", "content"),
         BOT("room", "prompt", "context"),
+        HISTORY("roomName", "[count]"),
         QUIT("");
 
         public final String[] argNames;

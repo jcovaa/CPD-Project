@@ -1,5 +1,9 @@
 package pt.up.fe.t06g10.server;
 
+import pt.up.fe.t06g10.server.auth.AuthService;
+import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.room.SessionManager;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,9 +14,15 @@ import java.net.Socket;
 public class ChatServer {
 
     private final int port;
+    private final AuthService authService;
+    private final TokenService tokenService;
+    private final SessionManager sessionManager;
 
-    public ChatServer(int port) {
+    public ChatServer(int port, AuthService authService, TokenService tokenService, SessionManager sessionManager) {
         this.port = port;
+        this.authService = authService;
+        this.tokenService = tokenService;
+        this.sessionManager = sessionManager;
     }
 
     public void start() {
@@ -24,7 +34,7 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected: " + socket.getInetAddress());
 
-                Thread.ofVirtual().start(new ConnectionHandler(socket));
+                Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager));
             }
 
         } catch (IOException ex) {
