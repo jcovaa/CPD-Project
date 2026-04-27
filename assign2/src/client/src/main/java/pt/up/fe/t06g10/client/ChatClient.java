@@ -44,6 +44,7 @@ public class ChatClient {
 
             Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
+            ui.printPrompt();
             while (true) {
                 String line = ui.readCommand();
                 if (line == null) break;

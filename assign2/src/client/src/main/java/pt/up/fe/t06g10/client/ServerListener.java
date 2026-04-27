@@ -18,6 +18,7 @@ public class ServerListener implements Runnable {
             String line;
             while ((line = reader.readLine()) != null) {
                 ui.printLine(line);
+                ui.printPrompt();
             }
         } catch (IOException ex) {
             ui.printError("Server listener error: " + ex.getMessage());

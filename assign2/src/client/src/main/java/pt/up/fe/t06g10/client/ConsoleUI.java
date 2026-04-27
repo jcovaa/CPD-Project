@@ -13,9 +13,12 @@ public class ConsoleUI {
     }
 
     public String readCommand() throws IOException {
+        return console.readLine();
+    }
+
+    public void printPrompt() {
         System.out.print("> ");
         System.out.flush();
-        return console.readLine();
     }
 
     public void printLine(String line) {

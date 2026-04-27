@@ -45,6 +45,12 @@ public class ConnectionHandler implements Runnable {
                 String args = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
                 System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
 
+                boolean knownCommand = Protocol.isValidClientCommand(command);
+                if (!knownCommand) {
+                    writer.println(Protocol.BAD_REQUEST + " Unknown command: " + command);
+                    continue;
+                }
+
                 if (!authenticated && !isPreAuthCommand(command)) {
                     writer.println(Protocol.UNAUTHORIZED + " Authentication required");
                     continue;
