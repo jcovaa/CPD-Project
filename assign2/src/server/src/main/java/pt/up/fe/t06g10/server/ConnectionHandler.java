@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ConnectionHandler implements Runnable {
-    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER"};
+    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP"};
 
     private final Socket socket;
     private final AuthService authService;
@@ -100,6 +100,7 @@ public class ConnectionHandler implements Runnable {
                 case "LEAVE_ROOM" -> handleLeaveRoom();
                 case "SEND" -> handleSend(args);
                 case "HISTORY" -> handleHistory(args);
+                case "HELP" -> handleHelp();
                 default -> Protocol.BAD_REQUEST + " Unknown command: " + command;
             };
         } catch (Exception e) {
@@ -236,6 +237,39 @@ public class ConnectionHandler implements Runnable {
 
     private String handleHistory(String args) {
         return Protocol.NOT_FOUND + " History not implemented yet";
+    }
+
+    private String handleHelp() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("--------------------------------------------------\n");
+        builder.append("               WELCOME TO THE CHAT APP\n");
+        builder.append("--------------------------------------------------\n");
+        builder.append("\n");
+        builder.append("Usage: <COMMAND> [arguments]\n");
+        builder.append("\n");
+        builder.append("Available commands:\n");
+        builder.append("  AUTH <username> <password>        - Login with username and password\n");
+        builder.append("  REGISTER <username> <password>    - Create a new user account\n");
+        builder.append("  TOKEN <token>                     - Authenticate using a session token\n");
+        builder.append("  RECONNECT <username> <token>      - Reconnect an existing session\n");
+        builder.append("  LOGOUT                            - Log out of the current session\n");
+        builder.append("  LIST_ROOMS                        - List available chat rooms\n");
+        builder.append("  CREATE_ROOM <roomName> [prompt]   - Create a new room\n");
+        builder.append("  JOIN_ROOM <roomName>              - Join the specified room\n");
+        builder.append("  LEAVE_ROOM                        - Leave the current room\n");
+        builder.append("  SEND <message>                    - Send a message to the current room\n");
+        builder.append("  MESSAGE <roomName> <content>      - Send a message to a specific room\n");
+        builder.append("  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room\n");
+        builder.append("  HISTORY <roomName> [count]        - Show recent messages from a room\n");
+        builder.append("  HELP                              - Show this help text\n");
+        builder.append("  QUIT                              - Disconnect\n");
+        builder.append("\n");
+        builder.append("Notes:\n");
+        builder.append("  - Arguments in <> are required; in [] are optional.\n");
+        builder.append("--------------------------------------------------\n");
+
+        return builder.toString();
     }
 
     private void cleanup() {
