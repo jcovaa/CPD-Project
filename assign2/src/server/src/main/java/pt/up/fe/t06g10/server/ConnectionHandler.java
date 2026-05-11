@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ConnectionHandler implements Runnable {
-    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP"};
+    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP", "QUIT"};
 
     private final Socket socket;
     private final AuthService authService;
@@ -58,6 +58,10 @@ public class ConnectionHandler implements Runnable {
 
                 String response = processCommand(command, args);
                 writer.println(response);
+
+                if (command.equalsIgnoreCase("QUIT")) {
+                    break;
+                }
             }
 
         } catch (IOException e) {
@@ -101,6 +105,7 @@ public class ConnectionHandler implements Runnable {
                 case "SEND" -> handleSend(args);
                 case "HISTORY" -> handleHistory(args);
                 case "HELP" -> handleHelp();
+                case "QUIT" -> handleQuit();
                 default -> Protocol.BAD_REQUEST + " Unknown command: " + command;
             };
         } catch (Exception e) {
@@ -270,6 +275,11 @@ public class ConnectionHandler implements Runnable {
         builder.append("--------------------------------------------------\n");
 
         return builder.toString();
+    }
+
+    private String handleQuit() {
+        cleanup();
+        return Protocol.OK + " Logged out successfully. Closing the application";
     }
 
     private void cleanup() {
