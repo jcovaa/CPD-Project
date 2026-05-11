@@ -22,6 +22,7 @@ public class Protocol {
         MESSAGE("roomName", "content"),
         BOT("room", "prompt", "context"),
         HISTORY("roomName", "[count]"),
+        HELP(""),
         QUIT("");
 
         public final String[] argNames;

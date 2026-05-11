@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ConnectionHandler implements Runnable {
-    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "QUIT"};
+    private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP", "QUIT"};
 
     private final Socket socket;
     private final AuthService authService;
@@ -104,6 +104,7 @@ public class ConnectionHandler implements Runnable {
                 case "LEAVE_ROOM" -> handleLeaveRoom();
                 case "SEND" -> handleSend(args);
                 case "HISTORY" -> handleHistory(args);
+                case "HELP" -> handleHelp();
                 case "QUIT" -> handleQuit();
                 default -> Protocol.BAD_REQUEST + " Unknown command: " + command;
             };
@@ -241,6 +242,37 @@ public class ConnectionHandler implements Runnable {
 
     private String handleHistory(String args) {
         return Protocol.NOT_FOUND + " History not implemented yet";
+    }
+
+    private String handleHelp() {
+        return """
+                --------------------------------------------------
+                               WELCOME TO THE CHAT APP
+                --------------------------------------------------
+                
+                Usage: <COMMAND> [arguments]
+                
+                Available commands:
+                  AUTH <username> <password>        - Login with username and password
+                  REGISTER <username> <password>    - Create a new user account
+                  TOKEN <token>                     - Authenticate using a session token
+                  RECONNECT <username> <token>      - Reconnect an existing session
+                  LOGOUT                            - Log out of the current session
+                  LIST_ROOMS                        - List available chat rooms
+                  CREATE_ROOM <roomName> [prompt]   - Create a new room
+                  JOIN_ROOM <roomName>              - Join the specified room
+                  LEAVE_ROOM                        - Leave the current room
+                  SEND <message>                    - Send a message to the current room
+                  MESSAGE <roomName> <content>      - Send a message to a specific room
+                  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room
+                  HISTORY <roomName> [count]        - Show recent messages from a room
+                  HELP                              - Show this help text
+                  QUIT                              - Disconnect
+                
+                Notes:
+                  - Arguments in <> are required; in [] are optional.
+                --------------------------------------------------
+                """;
     }
 
     private String handleQuit() {
