@@ -245,36 +245,34 @@ public class ConnectionHandler implements Runnable {
     }
 
     private String handleHelp() {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("--------------------------------------------------\n");
-        builder.append("               WELCOME TO THE CHAT APP\n");
-        builder.append("--------------------------------------------------\n");
-        builder.append("\n");
-        builder.append("Usage: <COMMAND> [arguments]\n");
-        builder.append("\n");
-        builder.append("Available commands:\n");
-        builder.append("  AUTH <username> <password>        - Login with username and password\n");
-        builder.append("  REGISTER <username> <password>    - Create a new user account\n");
-        builder.append("  TOKEN <token>                     - Authenticate using a session token\n");
-        builder.append("  RECONNECT <username> <token>      - Reconnect an existing session\n");
-        builder.append("  LOGOUT                            - Log out of the current session\n");
-        builder.append("  LIST_ROOMS                        - List available chat rooms\n");
-        builder.append("  CREATE_ROOM <roomName> [prompt]   - Create a new room\n");
-        builder.append("  JOIN_ROOM <roomName>              - Join the specified room\n");
-        builder.append("  LEAVE_ROOM                        - Leave the current room\n");
-        builder.append("  SEND <message>                    - Send a message to the current room\n");
-        builder.append("  MESSAGE <roomName> <content>      - Send a message to a specific room\n");
-        builder.append("  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room\n");
-        builder.append("  HISTORY <roomName> [count]        - Show recent messages from a room\n");
-        builder.append("  HELP                              - Show this help text\n");
-        builder.append("  QUIT                              - Disconnect\n");
-        builder.append("\n");
-        builder.append("Notes:\n");
-        builder.append("  - Arguments in <> are required; in [] are optional.\n");
-        builder.append("--------------------------------------------------\n");
-
-        return builder.toString();
+        return """
+                --------------------------------------------------
+                               WELCOME TO THE CHAT APP
+                --------------------------------------------------
+                
+                Usage: <COMMAND> [arguments]
+                
+                Available commands:
+                  AUTH <username> <password>        - Login with username and password
+                  REGISTER <username> <password>    - Create a new user account
+                  TOKEN <token>                     - Authenticate using a session token
+                  RECONNECT <username> <token>      - Reconnect an existing session
+                  LOGOUT                            - Log out of the current session
+                  LIST_ROOMS                        - List available chat rooms
+                  CREATE_ROOM <roomName> [prompt]   - Create a new room
+                  JOIN_ROOM <roomName>              - Join the specified room
+                  LEAVE_ROOM                        - Leave the current room
+                  SEND <message>                    - Send a message to the current room
+                  MESSAGE <roomName> <content>      - Send a message to a specific room
+                  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room
+                  HISTORY <roomName> [count]        - Show recent messages from a room
+                  HELP                              - Show this help text
+                  QUIT                              - Disconnect
+                
+                Notes:
+                  - Arguments in <> are required; in [] are optional.
+                --------------------------------------------------
+                """;
     }
 
     private String handleQuit() {
