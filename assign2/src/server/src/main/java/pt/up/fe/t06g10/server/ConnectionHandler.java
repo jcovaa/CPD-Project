@@ -2,8 +2,10 @@ package pt.up.fe.t06g10.server;
 
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 import pt.up.fe.t06g10.shared.Protocol;
+import pt.up.fe.t06g10.shared.model.Message;
 import pt.up.fe.t06g10.shared.model.Session;
 
 import java.io.BufferedReader;
@@ -19,16 +21,18 @@ public class ConnectionHandler implements Runnable {
     private final AuthService authService;
     private final TokenService tokenService;
     private final SessionManager sessionManager;
+    private final RoomManager roomManager;
 
     private boolean authenticated = false;
     private String currentToken = null;
     private String currentUsername = null;
 
-    public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager) {
+    public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager, RoomManager roomManager) {
         this.socket = socket;
         this.authService = authService;
         this.tokenService = tokenService;
         this.sessionManager = sessionManager;
+        this.roomManager = roomManager;
     }
 
     @Override

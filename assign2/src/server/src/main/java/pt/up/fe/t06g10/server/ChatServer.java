@@ -8,7 +8,7 @@ import pt.up.fe.t06g10.server.room.SessionManager;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-0
+
 /**
  * Simple TCP/IP socket server for the distributed chat system.
  */
