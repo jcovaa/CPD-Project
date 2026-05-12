@@ -14,4 +14,20 @@ public class Message {
         this.room = room;
         this.timestamp = Instant.now();
     }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
 }
