@@ -101,7 +101,7 @@ public class ConnectionHandler implements Runnable {
                     }
                     yield handleRegister(args);
                 }
-                case "LOGOUT" -> handleLogout(args);
+                case "LOGOUT" -> handleLogout();
                 case "LIST_ROOMS" -> handleListRooms();
                 case "CREATE_ROOM" -> handleCreateRoom(args);
                 case "JOIN_ROOM" -> handleJoinRoom(args);
@@ -207,7 +207,7 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
-    private String handleLogout(String args) {
+    private String handleLogout() {
         if (!authenticated) {
             return Protocol.BAD_REQUEST + " Not authenticated";
         }
@@ -225,27 +225,105 @@ public class ConnectionHandler implements Runnable {
     }
 
     private String handleListRooms() {
-        return Protocol.NOT_FOUND + " No rooms implemented yet";
+        java.util.List<String> rooms = roomManager.listRoomNames();
+        if (rooms.isEmpty()) {
+            return Protocol.OK + " (no rooms)";
+        }
+        return Protocol.OK + " " + String.join(",", rooms);
     }
 
     private String handleCreateRoom(String args) {
-        return Protocol.NOT_FOUND + " Room creation not implemented yet";
+        String roomName = args == null ? "" : args.trim().split("\\s+", 2)[0];
+        if (roomName.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: CREATE_ROOM <roomName> [prompt]";
+        }
+        if (roomManager.roomExists(roomName)) {
+            return Protocol.BAD_REQUEST + " Room already exists";
+        }
+        roomManager.createRoom(roomName);
+        return Protocol.OK + " Room created";
     }
 
     private String handleJoinRoom(String args) {
-        return Protocol.NOT_FOUND + " Room joining not implemented yet";
+        String roomName = args == null ? "" : args.trim();
+        if (roomName.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: JOIN_ROOM <roomName>";
+        }
+        if (!roomManager.roomExists(roomName)) {
+            return Protocol.NOT_FOUND + " Room not found";
+        }
+        if (currentToken == null) {
+            return Protocol.UNAUTHORIZED + " Authentication required";
+        }
+
+        String currentRoom = sessionManager.getUserRoom(currentToken);
+        if (currentRoom != null && currentRoom.equals(roomName)) {
+            return Protocol.BAD_REQUEST + " Already in that room";
+        }
+        if (currentRoom != null) {
+            roomManager.removeUserFromRoom(currentRoom, currentUsername);
+        }
+        sessionManager.setUserRoom(currentToken, roomName);
+        roomManager.addUserToRoom(roomName, currentUsername);
+        return Protocol.OK + " Joined room " + roomName;
     }
 
     private String handleLeaveRoom() {
-        return Protocol.NOT_FOUND + " Room leaving not implemented yet";
+        if (currentToken == null) {
+            return Protocol.UNAUTHORIZED + " Authentication required";
+        }
+        String roomName = sessionManager.getUserRoom(currentToken);
+        if (roomName == null) {
+            return Protocol.BAD_REQUEST + " Not currently in a room";
+        }
+        roomManager.removeUserFromRoom(roomName, currentUsername);
+        sessionManager.setUserRoom(currentToken, null);
+        return Protocol.OK + " Left room " + roomName;
     }
 
     private String handleSend(String args) {
-        return Protocol.NOT_FOUND + " Messaging not implemented yet";
+        if (currentToken == null) {
+            return Protocol.UNAUTHORIZED + " Authentication required";
+        }
+        String roomName = sessionManager.getUserRoom(currentToken);
+        if (roomName == null) {
+            return Protocol.BAD_REQUEST + " Join a room first";
+        }
+        String content = args == null ? "" : args.trim();
+        if (content.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: SEND <message>";
+        }
+        Message message = roomManager.addMessage(roomName, currentUsername, content);
+        if (message == null) {
+            return Protocol.NOT_FOUND + " Room not found";
+        }
+        return Protocol.OK + " Message sent";
     }
 
     private String handleHistory(String args) {
-        return Protocol.NOT_FOUND + " History not implemented yet";
+        String[] parts = args == null ? new String[0] : args.trim().split("\\s+", 2);
+        if (parts.length == 0 || parts[0].isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: HISTORY <roomName> [count]";
+        }
+        String roomName = parts[0];
+        int count = 0;
+        if (parts.length > 1 && !parts[1].isBlank()) {
+            try {
+                count = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException e) {
+                return Protocol.BAD_REQUEST + " Invalid count";
+            }
+        }
+        java.util.List<Message> history = roomManager.getHistory(roomName, count);
+        if (history.isEmpty() && !roomManager.roomExists(roomName)) {
+            return Protocol.NOT_FOUND + " Room not found";
+        }
+        StringBuilder builder = new StringBuilder();
+        builder.append(Protocol.OK);
+        for (Message message : history) {
+            builder.append(" ").append(message.getSender()).append(":").append(message.getContent());
+        }
+        return builder.toString();
     }
 
     private String handleHelp() {
