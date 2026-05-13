@@ -23,6 +23,7 @@ public class ConnectionHandler implements Runnable {
     private boolean authenticated = false;
     private String currentToken = null;
     private String currentUsername = null;
+    private final Runnable disconnectHandler = this::disconnect;
 
     public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager) {
         this.socket = socket;
@@ -133,6 +134,7 @@ public class ConnectionHandler implements Runnable {
             this.authenticated = true;
 
             sessionManager.registerSession(currentToken, session);
+            sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
 
             return Protocol.OK + " " + session.getToken();
         } catch (AuthService.AuthException e) {
@@ -155,6 +157,7 @@ public class ConnectionHandler implements Runnable {
         this.authenticated = true;
 
         sessionManager.registerSession(currentToken, session);
+        sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
 
         return Protocol.OK + " " + currentUsername;
     }
@@ -164,24 +167,28 @@ public class ConnectionHandler implements Runnable {
             return Protocol.BAD_REQUEST + " Already authenticated";
         }
 
-        String[] parts = args.split("\\s+", 2);
-        if (parts.length < 2) {
-            return Protocol.BAD_REQUEST + " Usage: RECONNECT <username> <token>";
+        String token = args.trim();
+        if (token.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: RECONNECT <token>";
         }
-
-        String username = parts[0];
-        String token = parts[1];
 
         Session session = tokenService.validateToken(token);
-        if (session == null || !session.getUsername().equals(username)) {
-            return Protocol.UNAUTHORIZED + " Invalid token for user";
+        if (session == null) {
+            return Protocol.UNAUTHORIZED + " Invalid or expired token";
         }
 
+        String previousRoom = sessionManager.getUserRoom(token);
+
         this.currentToken = token;
-        this.currentUsername = username;
+        this.currentUsername = session.getUsername();
         this.authenticated = true;
 
         sessionManager.registerSession(currentToken, session);
+        sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
+
+        if (previousRoom != null) {
+            sessionManager.setUserRoom(currentToken, previousRoom);
+        }
 
         return Protocol.OK + " Reconnected successfully";
     }
@@ -256,7 +263,7 @@ public class ConnectionHandler implements Runnable {
                   AUTH <username> <password>        - Login with username and password
                   REGISTER <username> <password>    - Create a new user account
                   TOKEN <token>                     - Authenticate using a session token
-                  RECONNECT <username> <token>      - Reconnect an existing session
+                  RECONNECT <token>                  - Reconnect an existing session
                   LOGOUT                            - Log out of the current session
                   LIST_ROOMS                        - List available chat rooms
                   CREATE_ROOM <roomName> [prompt]   - Create a new room
@@ -282,7 +289,18 @@ public class ConnectionHandler implements Runnable {
 
     private void cleanup() {
         if (currentToken != null) {
-            sessionManager.unregisterSession(currentToken);
+            Runnable registeredHandler = sessionManager.getDisconnectHandler(currentToken);
+            if (registeredHandler == disconnectHandler) {
+                sessionManager.unregisterSession(currentToken);
+                sessionManager.unregisterDisconnectHandler(currentToken);
+            }
+        }
+    }
+
+    public void disconnect() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
         }
     }
 }

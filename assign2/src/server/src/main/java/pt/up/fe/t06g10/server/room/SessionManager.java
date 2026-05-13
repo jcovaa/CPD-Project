@@ -10,9 +10,11 @@ import java.util.stream.Collectors;
 
 public class SessionManager {
     private final Map<String, UserSession> activeSessions;
+    private final Map<String, Runnable> disconnectHandlers;
 
     public SessionManager() {
         this.activeSessions = new ConcurrentHashMap<>();
+        this.disconnectHandlers = new ConcurrentHashMap<>();
     }
 
     public void registerSession(String token, Session session) {
@@ -50,6 +52,21 @@ public class SessionManager {
 
     public Collection<UserSession> getUsersInRoom(String roomId) {
         return activeSessions.values().stream().filter(s -> roomId.equals(s.getCurrentRoom())).collect(Collectors.toList());
+    }
+
+    public void registerDisconnectHandler(String token, Runnable disconnectHandler) {
+        Runnable old = disconnectHandlers.put(token, disconnectHandler);
+        if (old != null) {
+            old.run();
+        }
+    }
+
+    public void unregisterDisconnectHandler(String token) {
+        disconnectHandlers.remove(token);
+    }
+
+    public Runnable getDisconnectHandler(String token) {
+        return disconnectHandlers.get(token);
     }
 
     public int getActiveSessionCount() {
