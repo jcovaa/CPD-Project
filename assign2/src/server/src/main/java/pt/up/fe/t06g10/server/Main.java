@@ -3,6 +3,10 @@ package pt.up.fe.t06g10.server;
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
 import pt.up.fe.t06g10.server.database.EntityManagerFactoryProvider;
+import pt.up.fe.t06g10.server.entity.MessageEntity;
+import pt.up.fe.t06g10.server.entity.RoomEntity;
+import pt.up.fe.t06g10.server.entity.RoomMemberEntity;
+import pt.up.fe.t06g10.server.entity.UserEntity;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 import pt.up.fe.t06g10.shared.database.UserDatabase;
@@ -35,7 +39,7 @@ public class Main {
             return;
         }
 
-        EntityManagerFactoryProvider.initialize();
+        EntityManagerFactoryProvider.initialize(UserEntity.class, RoomEntity.class, RoomMemberEntity.class, MessageEntity.class);
         Runtime.getRuntime().addShutdownHook(new Thread(EntityManagerFactoryProvider::close));
 
         TokenService tokenService = new TokenService();
