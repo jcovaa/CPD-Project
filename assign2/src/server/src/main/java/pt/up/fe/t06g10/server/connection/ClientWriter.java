@@ -21,7 +21,6 @@ public class ClientWriter implements Runnable {
     private final ArrayDeque<String> queue = new ArrayDeque<>(QUEUE_CAPACITY);
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
-    private final Condition notFull = lock.newCondition();
 
     private boolean queueOffer(String msg) {
         lock.lock();
@@ -43,9 +42,7 @@ public class ClientWriter implements Runnable {
             while (queue.isEmpty()) {
                 notEmpty.await();
             }
-            String msg = queue.removeFirst();
-            notFull.signal();
-            return msg;
+            return queue.removeFirst();
         } finally {
             lock.unlock();
         }
@@ -53,23 +50,24 @@ public class ClientWriter implements Runnable {
 
     private static final String POISON_PILL = new String("__STOP__");
 
-    private final PrintWriter out;
+    private volatile PrintWriter out;
     private volatile Thread thread;
 
     public ClientWriter(Socket socket) throws IOException {
         this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
     }
 
-    public void start() {
+    public void start(String clientUserName) {
         thread = Thread.ofVirtual()
-                .name("client-writer")
+                .name("client-writer-" + clientUserName)
                 .start(this);
     }
 
     public void stop() {
         lock.lock();
         try {
-            if (!queue.contains(POISON_PILL)) {
+            boolean alreadyQueued = queue.stream().anyMatch(m -> m == POISON_PILL);
+            if (!alreadyQueued) {
                 if (queue.size() >= QUEUE_CAPACITY) {
                     queue.clear();
                 }
@@ -88,6 +86,12 @@ public class ClientWriter implements Runnable {
     public boolean enqueue(String message) {
         if (message == null) throw new IllegalArgumentException("message must not be null");
         return queueOffer(message);
+    }
+
+    public synchronized void replaceSocket(Socket newSocket) throws IOException {
+        PrintWriter old = this.out;
+        this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(newSocket.getOutputStream())), true);
+        old.close();
     }
 
     @Override
