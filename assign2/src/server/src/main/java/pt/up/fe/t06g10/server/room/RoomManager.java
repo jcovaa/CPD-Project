@@ -83,7 +83,7 @@ public class RoomManager {
 
         MessageEntity entity = new MessageEntity(room.get(), user.get(), content);
         messageRepository.save(entity);
-        return new Message(sender, content, roomName);
+        return new Message(sender, content, roomName, entity.getCreatedAt());
     }
 
     public List<Message> getHistory(String roomName, int count) {
@@ -97,7 +97,7 @@ public class RoomManager {
         for (int i = entities.size() - 1; i >= 0; i--) {
             MessageEntity entity = entities.get(i);
             String sender = entity.getSender().getUsername();
-            messages.add(new Message(sender, entity.getContent(), roomName));
+            messages.add(new Message(sender, entity.getContent(), roomName, entity.getCreatedAt()));
         }
         return messages;
     }
