@@ -7,6 +7,9 @@ import pt.up.fe.t06g10.server.entity.MessageEntity;
 import pt.up.fe.t06g10.server.entity.RoomEntity;
 import pt.up.fe.t06g10.server.entity.RoomMemberEntity;
 import pt.up.fe.t06g10.server.entity.UserEntity;
+import pt.up.fe.t06g10.server.repository.MessageRepository;
+import pt.up.fe.t06g10.server.repository.RoomMemberRepository;
+import pt.up.fe.t06g10.server.repository.RoomRepository;
 import pt.up.fe.t06g10.server.repository.UserRepository;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
@@ -29,13 +32,20 @@ public class Main {
         EntityManagerFactoryProvider.initialize(UserEntity.class, RoomEntity.class, RoomMemberEntity.class, MessageEntity.class);
         Runtime.getRuntime().addShutdownHook(new Thread(EntityManagerFactoryProvider::close));
 
+        ChatServer server = getServer(port);
+        server.start();
+    }
+
+    private static ChatServer getServer(int port) {
         TokenService tokenService = new TokenService();
         UserRepository userRepository = new UserRepository();
         AuthService authService = new AuthService(userRepository, tokenService);
+        RoomRepository roomRepository = new RoomRepository();
+        RoomMemberRepository roomMemberRepository = new RoomMemberRepository();
+        MessageRepository messageRepository = new MessageRepository();
         SessionManager sessionManager = new SessionManager();
-        RoomManager roomManager = new RoomManager();
+        RoomManager roomManager = new RoomManager(roomRepository, roomMemberRepository, messageRepository, userRepository);
 
-        ChatServer server = new ChatServer(port, authService, tokenService, sessionManager, roomManager);
-        server.start();
+        return new ChatServer(port, authService, tokenService, sessionManager, roomManager);
     }
 }
