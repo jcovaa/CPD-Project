@@ -1,4 +1,16 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: chat-postgres
+    environment:
+      POSTGRES_DB: chat
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   # --- NVIDIA GPU SETUP ---
   ollama-nvidia:
     image: ollama/ollama:latest
@@ -55,4 +67,5 @@ services:
       - ollama:/root/.ollama
 
 volumes:
+  postgres_data:
   ollama:
