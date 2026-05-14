@@ -15,10 +15,22 @@ cd src
 ./gradlew build
 ```
 
+Start the Docker services:
+
+```bash
+docker compose up -d
+```
+
+Create the environment file:
+
+```bash
+cp server/.env.example server/.env
+```
+
 Start the server:
 
 ```bash
-java -cp "server/build/libs/server.jar:shared/build/libs/shared.jar" pt.up.fe.t06g10.server.Main 8888
+./gradlew :server:run --args="8888"
 ```
 
 Start the client:
