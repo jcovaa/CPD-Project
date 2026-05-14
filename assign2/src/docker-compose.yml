@@ -3,9 +3,9 @@ services:
     image: postgres:16
     container_name: chat-postgres
     environment:
-      POSTGRES_DB: chat
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: chatdb
+      POSTGRES_USER: chatuser
+      POSTGRES_PASSWORD: chatpass
     ports:
       - "5432:5432"
     volumes:
