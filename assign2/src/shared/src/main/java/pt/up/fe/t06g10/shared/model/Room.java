@@ -13,4 +13,34 @@ public class Room {
         this.messages = new ArrayList<>();
         this.activeUsers = new ArrayList<>();
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public List<String> getActiveUsers() {
+        return activeUsers;
+    }
+
+    public void addUser(String username) {
+        if (!activeUsers.contains(username)) {
+            activeUsers.add(username);
+        }
+    }
+
+    public void removeUser(String username) {
+        activeUsers.remove(username);
+    }
+
+    public boolean hasUser(String username) {
+        return activeUsers.contains(username);
+    }
+
+    public void addMessage(Message message) {
+        messages.add(message);
+    }
 }

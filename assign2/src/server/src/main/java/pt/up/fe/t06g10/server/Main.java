@@ -2,6 +2,7 @@ package pt.up.fe.t06g10.server;
 
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 import pt.up.fe.t06g10.shared.database.UserDatabase;
 
@@ -36,8 +37,9 @@ public class Main {
         TokenService tokenService = new TokenService();
         AuthService authService = new AuthService(userDB, tokenService);
         SessionManager sessionManager = new SessionManager();
+        RoomManager roomManager = new RoomManager();
 
-        ChatServer server = new ChatServer(port, authService, tokenService, sessionManager);
+        ChatServer server = new ChatServer(port, authService, tokenService, sessionManager, roomManager);
         server.start();
     }
 }
