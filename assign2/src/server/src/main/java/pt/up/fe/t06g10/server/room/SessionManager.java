@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class SessionManager {
     private final ThreadSafeMap<String, UserSession> activeSessions = new ThreadSafeMap<>();
+    private final ThreadSafeMap<String, Runnable> disconnectHandlers = new ThreadSafeMap<>();
 
     public void registerSession(String token, Session session, ClientWriter clientWriter) {
         activeSessions.put(token, new UserSession(token, session.getUsername(), clientWriter));
@@ -26,7 +27,6 @@ public class SessionManager {
     public ClientWriter getClientWriter(String token) {
         UserSession userSession = activeSessions.get(token);
         return userSession != null ? userSession.getWriter() : null;
-
     }
 
     public boolean isAuthenticated(String token) {
@@ -58,7 +58,22 @@ public class SessionManager {
     }
 
     public Collection<UserSession> getUsersInRoom(String roomId) {
-        return activeSessions.values().stream().filter(s -> roomId.equals(s.getCurrentRoom())).collect(Collectors.toList());
+        return activeSessions.values().stream()
+                .filter(s -> roomId.equals(s.getCurrentRoom()))
+                .collect(Collectors.toList());
+    }
+
+    public void registerDisconnectHandler(String token, Runnable disconnectHandler) {
+        Runnable old = disconnectHandlers.put(token, disconnectHandler);
+        if (old != null) old.run();
+    }
+
+    public void unregisterDisconnectHandler(String token) {
+        disconnectHandlers.remove(token);
+    }
+
+    public Runnable getDisconnectHandler(String token) {
+        return disconnectHandlers.get(token);
     }
 
     public int getActiveSessionCount() {
@@ -78,26 +93,16 @@ public class SessionManager {
             this.clientWriter = clientWriter;
         }
 
-        public String getToken() {
-            return token;
-        }
+        public String getToken() { return token; }
 
-        public String getUsername() {
-            return username;
-        }
+        public String getUsername() { return username; }
 
-        public String getCurrentRoom() {
-            return currentRoom;
-        }
+        public String getCurrentRoom() { return currentRoom; }
 
-        public void setCurrentRoom(String currentRoom) {
-            this.currentRoom = currentRoom;
-        }
+        public void setCurrentRoom(String r) { this.currentRoom = r; }
 
         public ClientWriter getWriter() { return clientWriter; }
 
-        public boolean isInRoom() {
-            return currentRoom != null;
-        }
+        public boolean isInRoom() { return currentRoom != null; }
     }
 }
