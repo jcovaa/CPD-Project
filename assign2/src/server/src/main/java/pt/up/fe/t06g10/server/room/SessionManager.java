@@ -1,24 +1,19 @@
 package pt.up.fe.t06g10.server.room;
 
+import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.shared.model.Session;
+import pt.up.fe.t06g10.shared.util.ThreadSafeMap;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class SessionManager {
-    private final Map<String, UserSession> activeSessions;
-    private final Map<String, Runnable> disconnectHandlers;
+    private final ThreadSafeMap<String, UserSession> activeSessions = new ThreadSafeMap<>();
+    private final ThreadSafeMap<String, Runnable> disconnectHandlers = new ThreadSafeMap<>();
 
-    public SessionManager() {
-        this.activeSessions = new ConcurrentHashMap<>();
-        this.disconnectHandlers = new ConcurrentHashMap<>();
-    }
-
-    public void registerSession(String token, Session session) {
-        activeSessions.put(token, new UserSession(token, session.getUsername()));
+    public void registerSession(String token, Session session, ClientWriter clientWriter) {
+        activeSessions.put(token, new UserSession(token, session.getUsername(), clientWriter));
     }
 
     public void unregisterSession(String token) {
@@ -29,9 +24,13 @@ public class SessionManager {
         return activeSessions.get(token);
     }
 
-    public boolean isAuthenticated(String token) {
+    public ClientWriter getClientWriter(String token) {
         UserSession userSession = activeSessions.get(token);
-        return userSession != null;
+        return userSession != null ? userSession.getWriter() : null;
+    }
+
+    public boolean isAuthenticated(String token) {
+        return activeSessions.get(token) != null;
     }
 
     public void setUserRoom(String token, String roomId) {
@@ -46,19 +45,27 @@ public class SessionManager {
         return userSession != null ? userSession.getCurrentRoom() : null;
     }
 
+    public void broadcastToRoom(String roomId, String message) {
+        for (UserSession userSession : activeSessions.values()) {
+            if (roomId.equals(userSession.getCurrentRoom()) && userSession.getWriter() != null) {
+                userSession.getWriter().enqueue(message);
+            }
+        }
+    }
+
     public Collection<UserSession> getAllUserSessions() {
         return Collections.unmodifiableCollection(activeSessions.values());
     }
 
     public Collection<UserSession> getUsersInRoom(String roomId) {
-        return activeSessions.values().stream().filter(s -> roomId.equals(s.getCurrentRoom())).collect(Collectors.toList());
+        return activeSessions.values().stream()
+                .filter(s -> roomId.equals(s.getCurrentRoom()))
+                .collect(Collectors.toList());
     }
 
     public void registerDisconnectHandler(String token, Runnable disconnectHandler) {
         Runnable old = disconnectHandlers.put(token, disconnectHandler);
-        if (old != null) {
-            old.run();
-        }
+        if (old != null) old.run();
     }
 
     public void unregisterDisconnectHandler(String token) {
@@ -76,32 +83,26 @@ public class SessionManager {
     public static class UserSession {
         private final String token;
         private final String username;
-        private String currentRoom;
+        private volatile String currentRoom;
+        private final ClientWriter clientWriter;
 
-        public UserSession(String token, String username) {
+        public UserSession(String token, String username, ClientWriter clientWriter) {
             this.token = token;
             this.username = username;
             this.currentRoom = null;
+            this.clientWriter = clientWriter;
         }
 
-        public String getToken() {
-            return token;
-        }
+        public String getToken() { return token; }
 
-        public String getUsername() {
-            return username;
-        }
+        public String getUsername() { return username; }
 
-        public String getCurrentRoom() {
-            return currentRoom;
-        }
+        public String getCurrentRoom() { return currentRoom; }
 
-        public void setCurrentRoom(String currentRoom) {
-            this.currentRoom = currentRoom;
-        }
+        public void setCurrentRoom(String r) { this.currentRoom = r; }
 
-        public boolean isInRoom() {
-            return currentRoom != null;
-        }
+        public ClientWriter getWriter() { return clientWriter; }
+
+        public boolean isInRoom() { return currentRoom != null; }
     }
 }

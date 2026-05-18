@@ -2,6 +2,7 @@ package pt.up.fe.t06g10.server;
 
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 import pt.up.fe.t06g10.shared.Protocol;
@@ -11,8 +12,10 @@ import pt.up.fe.t06g10.shared.model.Session;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ConnectionHandler implements Runnable {
     private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP", "QUIT"};
@@ -22,56 +25,73 @@ public class ConnectionHandler implements Runnable {
     private final TokenService tokenService;
     private final SessionManager sessionManager;
     private final RoomManager roomManager;
+    private final ClientWriter clientWriter;
+
+    private volatile ClientWriter activeWriter;
 
     private boolean authenticated = false;
     private String currentToken = null;
     private String currentUsername = null;
     private final Runnable disconnectHandler = this::disconnect;
 
-    public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager, RoomManager roomManager) {
+    public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager, RoomManager roomManager, ClientWriter clientWriter) {
         this.socket = socket;
         this.authService = authService;
         this.tokenService = tokenService;
         this.sessionManager = sessionManager;
         this.roomManager = roomManager;
+        this.clientWriter = clientWriter;
+    }
+
+    private void send(String message) {
+        ClientWriter w = activeWriter != null ? activeWriter : clientWriter;
+        if (w != null) {
+            w.enqueue(message);
+        }
     }
 
     @Override
     public void run() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+        clientWriter.start(socket.getRemoteSocketAddress().toString());
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.err.println("SERVER DEBUG: Received line: '" + line + "'");
                 String[] parts = Protocol.parse(line);
-                System.err.println("SERVER DEBUG: Parsed parts: " + java.util.Arrays.toString(parts));
+                System.err.println("SERVER DEBUG: Parsed parts: " + Arrays.toString(parts));
                 if (parts.length == 0) continue;
 
                 String command = parts[0];
-                String args = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
+                String args = parts.length > 1 ? String.join(" ", Arrays.copyOfRange(parts, 1, parts.length)) : "";
                 System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
 
                 boolean knownCommand = Protocol.isValidClientCommand(command);
                 if (!knownCommand) {
-                    writer.println(Protocol.BAD_REQUEST + " Unknown command: " + command);
+                    send(Protocol.BAD_REQUEST + " Unknown command: " + command);
                     continue;
                 }
 
                 if (!authenticated && !isPreAuthCommand(command)) {
-                    writer.println(Protocol.UNAUTHORIZED + " Authentication required");
+                    send(Protocol.UNAUTHORIZED + " Authentication required");
                     continue;
                 }
 
                 String response = processCommand(command, args);
-                writer.println(response);
+                if (response != null) send(response);
 
                 if (command.equalsIgnoreCase("QUIT")) {
                     break;
                 }
             }
-
         } catch (IOException e) {
             System.out.println("Client error: " + e.getMessage());
         } finally {
+            clientWriter.stop();
+            try {
+                clientWriter.awaitStop(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             cleanup();
             try {
                 socket.close();
@@ -131,13 +151,15 @@ public class ConnectionHandler implements Runnable {
         String username = creds[0];
         String password = creds[1];
 
+
         try {
             Session session = authService.authenticate(username, password);
             this.currentToken = session.getToken();
             this.currentUsername = username;
             this.authenticated = true;
+            this.activeWriter = clientWriter;
 
-            sessionManager.registerSession(currentToken, session);
+            sessionManager.registerSession(currentToken, session, clientWriter);
             sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
 
             return Protocol.OK + " " + session.getToken();
@@ -159,8 +181,9 @@ public class ConnectionHandler implements Runnable {
         this.currentToken = args;
         this.currentUsername = session.getUsername();
         this.authenticated = true;
+        this.activeWriter = clientWriter;
 
-        sessionManager.registerSession(currentToken, session);
+        sessionManager.registerSession(currentToken, session, clientWriter);
         sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
 
         return Protocol.OK + " " + currentUsername;
@@ -186,15 +209,16 @@ public class ConnectionHandler implements Runnable {
         this.currentToken = token;
         this.currentUsername = session.getUsername();
         this.authenticated = true;
+        this.activeWriter = clientWriter;
 
-        sessionManager.registerSession(currentToken, session);
+        sessionManager.registerSession(currentToken, session, clientWriter);
         sessionManager.registerDisconnectHandler(currentToken, disconnectHandler);
 
         if (previousRoom != null) {
             sessionManager.setUserRoom(currentToken, previousRoom);
         }
 
-        return Protocol.OK + " Reconnected successfully";
+        return Protocol.OK + " Reconnected as " + currentUsername;
     }
 
     private String handleRegister(String args) {
@@ -222,17 +246,19 @@ public class ConnectionHandler implements Runnable {
         if (currentToken != null) {
             tokenService.removeSession(currentToken);
             sessionManager.unregisterSession(currentToken);
+            sessionManager.unregisterDisconnectHandler(currentToken);
         }
 
         authenticated = false;
         currentToken = null;
         currentUsername = null;
+        activeWriter = null;
 
         return Protocol.OK + " Logged out successfully";
     }
 
     private String handleListRooms() {
-        java.util.List<String> rooms = roomManager.listRoomNames();
+        List<String> rooms = roomManager.listRoomNames();
         if (rooms.isEmpty()) {
             return Protocol.OK + " (no rooms)";
         }
@@ -269,9 +295,11 @@ public class ConnectionHandler implements Runnable {
         }
         if (currentRoom != null) {
             roomManager.removeUserFromRoom(currentRoom, currentUsername);
+            sessionManager.broadcastToRoom(currentRoom, "[" + currentUsername + " left the room]");
         }
         sessionManager.setUserRoom(currentToken, roomName);
         roomManager.addUserToRoom(roomName, currentUsername);
+        sessionManager.broadcastToRoom(roomName, "[" + currentUsername + " entered the room]");
         return Protocol.OK + " Joined room " + roomName;
     }
 
@@ -285,6 +313,7 @@ public class ConnectionHandler implements Runnable {
         }
         roomManager.removeUserFromRoom(roomName, currentUsername);
         sessionManager.setUserRoom(currentToken, null);
+        sessionManager.broadcastToRoom(roomName, "[" + currentUsername + " left the room]");
         return Protocol.OK + " Left room " + roomName;
     }
 
@@ -304,7 +333,8 @@ public class ConnectionHandler implements Runnable {
         if (message == null) {
             return Protocol.NOT_FOUND + " Room not found";
         }
-        return Protocol.OK + " Message sent";
+        sessionManager.broadcastToRoom(roomName, currentUsername + ": " + content);
+        return null;
     }
 
     private String handleHistory(String args) {
@@ -321,12 +351,11 @@ public class ConnectionHandler implements Runnable {
                 return Protocol.BAD_REQUEST + " Invalid count";
             }
         }
-        java.util.List<Message> history = roomManager.getHistory(roomName, count);
+        List<Message> history = roomManager.getHistory(roomName, count);
         if (history.isEmpty() && !roomManager.roomExists(roomName)) {
             return Protocol.NOT_FOUND + " Room not found";
         }
-        StringBuilder builder = new StringBuilder();
-        builder.append(Protocol.OK);
+        StringBuilder builder = new StringBuilder(Protocol.OK);
         for (Message message : history) {
             builder.append(" ").append(message.getSender()).append(":").append(message.getContent());
         }
@@ -373,9 +402,15 @@ public class ConnectionHandler implements Runnable {
         if (currentToken != null) {
             Runnable registeredHandler = sessionManager.getDisconnectHandler(currentToken);
             if (registeredHandler == disconnectHandler) {
+                String room = sessionManager.getUserRoom(currentToken);
+                if (room != null) {
+                    roomManager.removeUserFromRoom(room, currentUsername);
+                    sessionManager.broadcastToRoom(room, "[" + currentUsername + " disconnected]");
+                }
                 sessionManager.unregisterSession(currentToken);
                 sessionManager.unregisterDisconnectHandler(currentToken);
             }
+            currentToken = null;
         }
     }
 
@@ -383,6 +418,7 @@ public class ConnectionHandler implements Runnable {
         try {
             socket.close();
         } catch (IOException ignored) {
+
         }
     }
 }

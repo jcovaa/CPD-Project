@@ -2,6 +2,7 @@ package pt.up.fe.t06g10.server;
 
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 
@@ -37,7 +38,16 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 System.out.println("New client connected: " + socket.getInetAddress());
 
-                Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager, roomManager));
+                try {
+                    ClientWriter clientWriter = new ClientWriter(socket);
+                    Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager, roomManager, clientWriter));
+                } catch (IOException ex) {
+                    System.out.println("Failed to initialize client writer: " + ex.getMessage());
+                    try {
+                        socket.close();
+                    } catch (IOException ignored) {
+                    }
+                }
             }
 
         } catch (IOException ex) {
