@@ -66,7 +66,7 @@ public class ConnectionHandler implements Runnable {
                 System.err.println("SERVER DEBUG: command='" + command + "' args='" + args + "'");
 
                 boolean knownCommand = Protocol.isValidClientCommand(command);
-                if(!knownCommand) {
+                if (!knownCommand) {
                     send(Protocol.BAD_REQUEST + " Unknown command: " + command);
                     continue;
                 }
@@ -295,11 +295,11 @@ public class ConnectionHandler implements Runnable {
         }
         if (currentRoom != null) {
             roomManager.removeUserFromRoom(currentRoom, currentUsername);
-            sessionManager.broadcastToRoom(currentRoom, "[" + currentUsername + " left the room]" );
+            sessionManager.broadcastToRoom(currentRoom, "[" + currentUsername + " left the room]");
         }
         sessionManager.setUserRoom(currentToken, roomName);
         roomManager.addUserToRoom(roomName, currentUsername);
-        sessionManager.broadcastToRoom(roomName, "[" + currentUsername + " entered the room]" );
+        sessionManager.broadcastToRoom(roomName, "[" + currentUsername + " entered the room]");
         return Protocol.OK + " Joined room " + roomName;
     }
 

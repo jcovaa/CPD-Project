@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayDeque;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,17 +28,16 @@ public class ClientWriter implements Runnable {
     private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
     private static final String POISON_PILL = "__STOP__";
 
-    private boolean queueOffer(String msg) {
+    private void queueOffer(String msg) {
         lock.lock();
         try {
             if (queue.size() >= QUEUE_CAPACITY) {
                 queue.addLast(QUEUE_FULL_MSG);
                 notEmpty.signal();
-                return false;
+                return;
             }
             queue.addLast(msg);
             notEmpty.signal();
-            return true;
         } finally {
             lock.unlock();
         }
@@ -71,7 +71,7 @@ public class ClientWriter implements Runnable {
     public void stop() {
         lock.lock();
         try {
-            boolean alreadyQueued = queue.stream().anyMatch(m -> m == POISON_PILL);
+            boolean alreadyQueued = queue.stream().anyMatch(m -> Objects.equals(m, POISON_PILL));
             if (!alreadyQueued) {
                 if (queue.size() >= QUEUE_CAPACITY) {
                     queue.clear();
@@ -96,15 +96,9 @@ public class ClientWriter implements Runnable {
         }
     }
 
-    public boolean enqueue(String message) {
+    public void enqueue(String message) {
         if (message == null) throw new IllegalArgumentException("message must not be null");
-        return queueOffer(message);
-    }
-
-    public synchronized void replaceSocket(Socket newSocket) throws IOException {
-        PrintWriter old = this.out;
-        this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(newSocket.getOutputStream())), true);
-        old.close();
+        queueOffer(message);
     }
 
     @Override
@@ -112,9 +106,9 @@ public class ClientWriter implements Runnable {
         try {
             while (true) {
                 String message = queueTake();
-                if (message == POISON_PILL) break;
+                if (message.equals(POISON_PILL)) break;
 
-                if (message == QUEUE_FULL_MSG) {
+                if (message.equals(QUEUE_FULL_MSG)) {
                     out.println(Protocol.INTERNAL_ERROR + " Server busy, please try again");
                     if (out.checkError()) {
                         System.err.println("[ClientWriter] write error - socket likely closed");
