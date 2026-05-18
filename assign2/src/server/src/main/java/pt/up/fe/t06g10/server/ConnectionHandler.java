@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ConnectionHandler implements Runnable {
     private static final String[] PRE_AUTH_COMMANDS = {"AUTH", "TOKEN", "RECONNECT", "REGISTER", "HELP", "QUIT"};
@@ -44,7 +45,9 @@ public class ConnectionHandler implements Runnable {
 
     private void send(String message) {
         ClientWriter w = activeWriter != null ? activeWriter : clientWriter;
-        w.enqueue(message);
+        if (w != null) {
+            w.enqueue(message);
+        }
     }
 
     @Override
@@ -84,6 +87,11 @@ public class ConnectionHandler implements Runnable {
             System.out.println("Client error: " + e.getMessage());
         } finally {
             clientWriter.stop();
+            try {
+                clientWriter.awaitStop(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             cleanup();
             try {
                 socket.close();
