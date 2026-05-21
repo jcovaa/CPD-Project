@@ -12,7 +12,7 @@ Build once:
 
 ```bash
 cd src
-./gradlew build
+./gradlew shadowJar
 ```
 
 Start the Docker services:
@@ -24,17 +24,17 @@ docker compose up -d
 Create the environment file:
 
 ```bash
-cp server/.env.example server/.env
+cp .env.example .env
 ```
 
 Start the server:
 
 ```bash
-./gradlew :server:run --args="8888"
+java -jar server/build/libs/server.jar 8888
 ```
 
 Start the client:
 
 ```bash
-java -cp "client/build/libs/client.jar:shared/build/libs/shared.jar" pt.up.fe.t06g10.client.Main localhost 8888
+java -jar server/build/libs/client.jar localhost 8888
 ```
