@@ -2,6 +2,7 @@ package pt.up.fe.t06g10.server.repository;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.exception.ConstraintViolationException;
 import pt.up.fe.t06g10.server.database.EntityManagerFactoryProvider;
 import pt.up.fe.t06g10.server.entity.RoomEntity;
 import pt.up.fe.t06g10.server.entity.RoomMemberEntity;
@@ -22,6 +23,11 @@ public class RoomMemberRepository {
             RoomMemberEntity member = new RoomMemberEntity(room, user);
             session.persist(member);
             transaction.commit();
+        } catch (ConstraintViolationException e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+            // User already a member, which is acceptable
         } catch (RuntimeException e) {
             if (transaction != null) {
                 transaction.rollback();

@@ -31,9 +31,7 @@ public class RoomManager {
     }
 
     public void createRoom(String roomName) {
-        if (!roomRepository.existsByName(roomName)) {
-            roomRepository.save(new RoomEntity(roomName));
-        }
+        roomRepository.saveIfNotExists(new RoomEntity(roomName));
     }
 
     public List<String> listRoomNames() {
