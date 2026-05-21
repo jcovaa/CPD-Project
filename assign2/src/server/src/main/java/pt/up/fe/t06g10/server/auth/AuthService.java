@@ -2,7 +2,7 @@ package pt.up.fe.t06g10.server.auth;
 
 import pt.up.fe.t06g10.server.entity.UserEntity;
 import pt.up.fe.t06g10.server.repository.UserRepository;
-import pt.up.fe.t06g10.shared.model.Session;
+import pt.up.fe.t06g10.server.model.Session;
 import pt.up.fe.t06g10.shared.util.PasswordUtils;
 
 import java.util.Optional;

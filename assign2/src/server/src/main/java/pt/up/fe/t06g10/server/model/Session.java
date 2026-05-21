@@ -1,4 +1,4 @@
-package pt.up.fe.t06g10.shared.model;
+package pt.up.fe.t06g10.server.model;
 
 import java.time.Instant;
 import java.util.UUID;

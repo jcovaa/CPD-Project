@@ -6,8 +6,8 @@ import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 import pt.up.fe.t06g10.shared.Protocol;
-import pt.up.fe.t06g10.shared.model.Message;
-import pt.up.fe.t06g10.shared.model.Session;
+import pt.up.fe.t06g10.server.model.Message;
+import pt.up.fe.t06g10.server.model.Session;
 
 import java.io.BufferedReader;
 import java.io.IOException;

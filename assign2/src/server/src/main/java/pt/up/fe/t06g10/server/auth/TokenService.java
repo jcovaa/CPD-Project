@@ -1,6 +1,6 @@
 package pt.up.fe.t06g10.server.auth;
 
-import pt.up.fe.t06g10.shared.model.Session;
+import pt.up.fe.t06g10.server.model.Session;
 import pt.up.fe.t06g10.shared.util.ThreadSafeMap;
 
 public class TokenService {

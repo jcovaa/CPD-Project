@@ -7,7 +7,7 @@ import pt.up.fe.t06g10.server.repository.MessageRepository;
 import pt.up.fe.t06g10.server.repository.RoomMemberRepository;
 import pt.up.fe.t06g10.server.repository.RoomRepository;
 import pt.up.fe.t06g10.server.repository.UserRepository;
-import pt.up.fe.t06g10.shared.model.Message;
+import pt.up.fe.t06g10.server.model.Message;
 
 import java.util.ArrayList;
 import java.util.List;

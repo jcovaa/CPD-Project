@@ -1,7 +1,7 @@
 package pt.up.fe.t06g10.server.room;
 
 import pt.up.fe.t06g10.server.connection.ClientWriter;
-import pt.up.fe.t06g10.shared.model.Session;
+import pt.up.fe.t06g10.server.model.Session;
 import pt.up.fe.t06g10.shared.util.ThreadSafeMap;
 
 import java.util.Collection;
