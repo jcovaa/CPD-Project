@@ -1,5 +1,7 @@
 package pt.up.fe.t06g10.client;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -36,6 +38,40 @@ public class ChatClient {
         this.ui = new ConsoleUI();
     }
 
+
+    public void start() {
+        try {
+            SSLSocketFactory sslFact =
+                    (SSLSocketFactory) SSLSocketFactory.getDefault();
+            SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+            writer.println("LIST_ROOMS");
+
+            Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
+
+            ui.printPrompt();
+            while (true) {
+                String line = ui.readCommand();
+                if (line == null) break;
+
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                writer.println(line);
+                if (line.equalsIgnoreCase("QUIT")) break;
+            }
+
+            listener.join();
+        } catch (IOException e) {
+            ui.printError("Client error: " + e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /*
     public void start() {
         try (Socket socket = new Socket(hostname, port)) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -63,4 +99,6 @@ public class ChatClient {
             Thread.currentThread().interrupt();
         }
     }
+
+     */
 }

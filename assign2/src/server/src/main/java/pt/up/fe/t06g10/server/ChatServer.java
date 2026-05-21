@@ -6,9 +6,10 @@ import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
 
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * Simple TCP/IP socket server for the distributed chat system.
@@ -29,6 +30,39 @@ public class ChatServer {
         this.roomManager = roomManager;
     }
 
+
+    public void start() {
+        SSLServerSocket serverSocket;
+
+        try {
+            SSLServerSocketFactory sslSrvFact =
+                    (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            serverSocket = (SSLServerSocket) sslSrvFact.createServerSocket(port);
+
+            System.out.println("Server is listening on port " + port);
+
+            while (true) {
+                SSLSocket socket = (SSLSocket) serverSocket.accept();
+                System.out.println("New client connected: " + socket.getInetAddress());
+
+                try {
+                    ClientWriter clientWriter = new ClientWriter(socket);
+                    Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager, roomManager, clientWriter));
+                } catch (IOException ex) {
+                    System.out.println("Failed to initialize client writer: " + ex.getMessage());
+                    try {
+                        socket.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Server exception: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /*
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
 
@@ -55,4 +89,6 @@ public class ChatServer {
             ex.printStackTrace();
         }
     }
+
+     */
 }
