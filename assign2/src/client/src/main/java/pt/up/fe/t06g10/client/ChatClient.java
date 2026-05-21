@@ -39,14 +39,12 @@ public class ChatClient {
 
 
     public void start() {
-        try {
-            SSLSocketFactory sslFact =
-                    (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port);
+        SSLSocketFactory sslFact =
+                (SSLSocketFactory) SSLSocketFactory.getDefault();
+        try (SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port)) {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println("LIST_ROOMS");
 
             Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
