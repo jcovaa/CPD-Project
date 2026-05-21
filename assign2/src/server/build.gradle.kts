@@ -19,9 +19,6 @@ application {
 }
 
 tasks.shadowJar {
-    manifest {
-        attributes("Main-Class" to "pt.up.fe.t06g10.server.Main")
-    }
     archiveBaseName.set("server")
     archiveVersion.set("")
     archiveClassifier.set("")
