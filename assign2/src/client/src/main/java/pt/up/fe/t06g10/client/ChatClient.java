@@ -67,35 +67,4 @@ public class ChatClient {
             Thread.currentThread().interrupt();
         }
     }
-
-    /*
-    public void start() {
-        try (Socket socket = new Socket(hostname, port)) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println("LIST_ROOMS");
-
-            Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
-
-            ui.printPrompt();
-            while (true) {
-                String line = ui.readCommand();
-                if (line == null) break;
-
-                line = line.trim();
-                if (line.isEmpty()) continue;
-
-                writer.println(line);
-                if (line.equalsIgnoreCase("QUIT")) break;
-            }
-
-            listener.join();
-        } catch (IOException ex) {
-            ui.printError("Client error: " + ex.getMessage());
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-     */
 }

@@ -58,34 +58,4 @@ public class ChatServer {
             e.printStackTrace();
         }
     }
-
-    /*
-    public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-
-            System.out.println("Server is listening on port " + port);
-
-            while (true) {
-                Socket socket = serverSocket.accept();
-                System.out.println("New client connected: " + socket.getInetAddress());
-
-                try {
-                    ClientWriter clientWriter = new ClientWriter(socket);
-                    Thread.ofVirtual().start(new ConnectionHandler(socket, authService, tokenService, sessionManager, roomManager, clientWriter));
-                } catch (IOException ex) {
-                    System.out.println("Failed to initialize client writer: " + ex.getMessage());
-                    try {
-                        socket.close();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-
-        } catch (IOException ex) {
-            System.out.println("Server exception: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-     */
 }
