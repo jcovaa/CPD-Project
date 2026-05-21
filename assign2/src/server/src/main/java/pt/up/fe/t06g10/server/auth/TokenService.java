@@ -1,7 +1,7 @@
 package pt.up.fe.t06g10.server.auth;
 
 import pt.up.fe.t06g10.server.model.Session;
-import pt.up.fe.t06g10.shared.util.ThreadSafeMap;
+import pt.up.fe.t06g10.server.util.ThreadSafeMap;
 
 public class TokenService {
     private final ThreadSafeMap<String, Session> sessions;
