@@ -1,10 +1,11 @@
 package pt.up.fe.t06g10.client;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
 
 /**
  * Simple TCP/IP socket client for the distributed chat system.
@@ -36,11 +37,14 @@ public class ChatClient {
         this.ui = new ConsoleUI();
     }
 
+
     public void start() {
-        try (Socket socket = new Socket(hostname, port)) {
+        SSLSocketFactory sslFact =
+                (SSLSocketFactory) SSLSocketFactory.getDefault();
+        try (SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port)) {
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println("LIST_ROOMS");
 
             Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
@@ -57,9 +61,9 @@ public class ChatClient {
             }
 
             listener.join();
-        } catch (IOException ex) {
-            ui.printError("Client error: " + ex.getMessage());
-        } catch (InterruptedException ex) {
+        } catch (IOException e) {
+            ui.printError("Client error: " + e.getMessage());
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
