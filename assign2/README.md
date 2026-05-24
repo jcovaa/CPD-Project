@@ -36,5 +36,5 @@ java -jar server/build/libs/server.jar 8888
 Start the client:
 
 ```bash
-java -jar server/build/libs/client.jar localhost 8888
+java -jar client/build/libs/client.jar localhost 8888
 ```
