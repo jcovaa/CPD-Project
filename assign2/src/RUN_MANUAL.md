@@ -2,21 +2,34 @@
 
 Use this if you do not want to use the `Makefile` targets.
 
-## Build once
+## Prerequisites
+
+- Java 21+
+- Docker (for the PostgreSQL database)
+- Gradle wrapper (included as `gradlew`)
+
+## Database setup (one-time)
+
+Start PostgreSQL and Ollama:
 
 ```bash
-cd src
-./gradlew build
+docker compose up -d
+```
+
+Create the environment file:
+
+```bash
+cp .env.example .env
 ```
 
 ## TLS setup (one-time)
 
-If you already created these, skip this section. Expected files:
+Skip this section if you already have these files:
 
 - `certs/server.p12` (server keystore with private key)
 - `certs/client-truststore.p12` (client truststore)
 
-Create a server keypair and certificate, then trust it on the client side:
+You can either run `make tls` or follow the manual steps below.
 
 ```bash
 cd src
@@ -52,6 +65,18 @@ keytool -importcert \
   -noprompt
 ```
 
+## Build
+
+```bash
+cd src
+./gradlew build
+```
+
+This produces fat JARs (all dependencies bundled) at:
+
+- `server/build/libs/server.jar`
+- `client/build/libs/client.jar`
+
 ## Start the server (TLS)
 
 ```bash
@@ -59,7 +84,7 @@ cd src
 java -Djavax.net.ssl.keyStore=certs/server.p12 \
      -Djavax.net.ssl.keyStorePassword=changeit \
      -Djavax.net.ssl.keyStoreType=PKCS12 \
-     -cp "server/build/libs/server.jar:shared/build/libs/shared.jar" \
+     -cp "server/build/libs/server.jar" \
      pt.up.fe.t06g10.server.Main 8888
 ```
 
@@ -70,7 +95,7 @@ cd src
 java -Djavax.net.ssl.trustStore=certs/client-truststore.p12 \
      -Djavax.net.ssl.trustStorePassword=changeit \
      -Djavax.net.ssl.trustStoreType=PKCS12 \
-     -cp "client/build/libs/client.jar:shared/build/libs/shared.jar" \
+     -cp "client/build/libs/client.jar" \
      pt.up.fe.t06g10.client.Main localhost 8888
 ```
 

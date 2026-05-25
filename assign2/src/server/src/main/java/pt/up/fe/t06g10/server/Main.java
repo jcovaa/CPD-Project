@@ -2,15 +2,19 @@ package pt.up.fe.t06g10.server;
 
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
+import pt.up.fe.t06g10.server.database.EntityManagerFactoryProvider;
+import pt.up.fe.t06g10.server.entity.MessageEntity;
+import pt.up.fe.t06g10.server.entity.RoomEntity;
+import pt.up.fe.t06g10.server.entity.RoomMemberEntity;
+import pt.up.fe.t06g10.server.entity.UserEntity;
+import pt.up.fe.t06g10.server.repository.MessageRepository;
+import pt.up.fe.t06g10.server.repository.RoomMemberRepository;
+import pt.up.fe.t06g10.server.repository.RoomRepository;
+import pt.up.fe.t06g10.server.repository.UserRepository;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
-import pt.up.fe.t06g10.shared.database.UserDatabase;
-
-import java.io.IOException;
 
 public class Main {
-    private static final String USER_DB_FILE = "users.txt";
-
     public static void main(String[] args) {
         if (args.length < 1) {
             System.err.println("Usage: Main <port>");
@@ -25,21 +29,23 @@ public class Main {
             System.exit(1);
         }
 
-        UserDatabase userDB;
-        try {
-            userDB = new UserDatabase(USER_DB_FILE);
-        } catch (IOException e) {
-            System.err.println("Failed to load user database: " + e.getMessage());
-            System.exit(1);
-            return;
-        }
+        EntityManagerFactoryProvider.initialize(UserEntity.class, RoomEntity.class, RoomMemberEntity.class, MessageEntity.class);
+        Runtime.getRuntime().addShutdownHook(new Thread(EntityManagerFactoryProvider::close));
 
-        TokenService tokenService = new TokenService();
-        AuthService authService = new AuthService(userDB, tokenService);
-        SessionManager sessionManager = new SessionManager();
-        RoomManager roomManager = new RoomManager();
-
-        ChatServer server = new ChatServer(port, authService, tokenService, sessionManager, roomManager);
+        ChatServer server = getServer(port);
         server.start();
+    }
+
+    private static ChatServer getServer(int port) {
+        TokenService tokenService = new TokenService();
+        UserRepository userRepository = new UserRepository();
+        AuthService authService = new AuthService(userRepository, tokenService);
+        RoomRepository roomRepository = new RoomRepository();
+        RoomMemberRepository roomMemberRepository = new RoomMemberRepository();
+        MessageRepository messageRepository = new MessageRepository();
+        SessionManager sessionManager = new SessionManager();
+        RoomManager roomManager = new RoomManager(roomRepository, roomMemberRepository, messageRepository, userRepository);
+
+        return new ChatServer(port, authService, tokenService, sessionManager, roomManager);
     }
 }

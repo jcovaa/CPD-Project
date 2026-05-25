@@ -1,5 +1,11 @@
 rootProject.name = "DistributedChat"
 
-include("shared")
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
 include("server")
 include("client")

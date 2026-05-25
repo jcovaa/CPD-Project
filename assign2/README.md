@@ -2,19 +2,45 @@
 
 ## Architecture
 
-- `shared`: Common data models (User, Room, Message, Session)
 - `server`: TLS-enabled TCP server that accepts client connections
 - `client`: TLS-enabled TCP client that connects to the server
 
 ## Running
 
-### Quickstart (Makefile)
+### Prerequisites
 
-If you have `make`, you can run everything with shorter commands:
+- Java 21+
+- Docker (for PostgreSQL and Ollama)
+- `make` (optional, simplifies commands)
+
+### 1. Database
+
+Start PostgreSQL:
+
+```bash
+cd src
+docker compose up -d
+```
+
+Create the environment file:
+
+```bash
+cp .env.example .env
+```
+
+### 2. TLS setup (one-time)
 
 ```bash
 cd src
 make tls
+```
+
+This creates `certs/server.p12`, `certs/server.crt`, and `certs/client-truststore.p12`.
+
+### 3. Quickstart (Makefile)
+
+```bash
+cd src
 make server
 ```
 
@@ -35,7 +61,7 @@ make HOST=127.0.0.1 PORT=9999 CN=127.0.0.1 tls
 make STOREPASS=secret KEYPASS=secret tls
 ```
 
-Manual fallback instructions are in `RUN_MANUAL.md`.
+Manual fallback instructions are in [RUN_MANUAL.md](src/RUN_MANUAL.md).
 
 ### What this does (TLS setup)
 

@@ -1,6 +1,6 @@
 package pt.up.fe.t06g10.server.connection;
 
-import pt.up.fe.t06g10.shared.Protocol;
+import pt.up.fe.t06g10.server.Protocol;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
