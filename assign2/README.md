@@ -2,17 +2,37 @@
 
 ## Architecture
 
-- **shared**: Common data models (User, Room, Message, Session)
-- **server**: TCP server that accepts client connections
-- **client**: TCP client that connects to the server
+- `shared`: Common data models (User, Room, Message, Session)
+- `server`: TLS-enabled TCP server that accepts client connections
+- `client`: TLS-enabled TCP client that connects to the server
 
 ## Running
 
-Build once:
+### Quickstart (Makefile)
+
+If you have `make`, you can run everything with shorter commands:
 
 ```bash
 cd src
-./gradlew shadowJar
+make tls
+make server
+```
+
+In another terminal:
+
+```bash
+cd src
+make client
+```
+
+Optional overrides:
+
+```bash
+# Use a different host/port or certificate CN
+make HOST=127.0.0.1 PORT=9999 CN=127.0.0.1 tls
+
+# Use a different keystore password
+make STOREPASS=secret KEYPASS=secret tls
 ```
 
 Start the Docker services:
@@ -27,14 +47,14 @@ Create the environment file:
 cp .env.example .env
 ```
 
-Start the server:
+Manual fallback instructions are in [RUN_MANUAL.md](src/RUN_MANUAL.md).
 
-```bash
-java -jar server/build/libs/server.jar 8888
-```
+### What this does (TLS setup)
 
-Start the client:
+The `make tls` target creates these files in `certs/`:
 
-```bash
-java -jar client/build/libs/client.jar localhost 8888
-```
+- `certs/server.p12` (server keystore with private key)
+- `certs/server.crt` (server certificate exported from the keystore)
+- `certs/client-truststore.p12` (client truststore)
+
+If you already created these, `make tls` will keep them as-is.

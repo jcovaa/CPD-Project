@@ -39,5 +39,9 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+### Certs ###
+*.p12
+*.jks
+
 ### Environment ###
 .env
