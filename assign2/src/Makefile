@@ -9,7 +9,6 @@ JAVA ?= java
 
 SERVER_JAR := server/build/libs/server.jar
 CLIENT_JAR := client/build/libs/client.jar
-SHARED_JAR := shared/build/libs/shared.jar
 
 .PHONY: build tls server client clean-certs
 
@@ -51,14 +50,14 @@ server: build
 	$(JAVA) -Djavax.net.ssl.keyStore=certs/server.p12 \
 	     -Djavax.net.ssl.keyStorePassword=$(STOREPASS) \
 	     -Djavax.net.ssl.keyStoreType=PKCS12 \
-	     -cp "$(SERVER_JAR):$(SHARED_JAR)" \
+	     -cp "$(SERVER_JAR)" \
 	     pt.up.fe.t06g10.server.Main $(PORT)
 
 client: build
 	$(JAVA) -Djavax.net.ssl.trustStore=certs/client-truststore.p12 \
 	     -Djavax.net.ssl.trustStorePassword=$(STOREPASS) \
 	     -Djavax.net.ssl.trustStoreType=PKCS12 \
-	     -cp "$(CLIENT_JAR):$(SHARED_JAR)" \
+	     -cp "$(CLIENT_JAR)" \
 	     pt.up.fe.t06g10.client.Main $(HOST) $(PORT)
 
 clean-certs:
