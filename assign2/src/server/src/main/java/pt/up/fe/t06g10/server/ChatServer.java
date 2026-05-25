@@ -34,7 +34,7 @@ public class ChatServer {
     public void start() {
         SSLServerSocketFactory sslSrvFact =
                 (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        try(SSLServerSocket serverSocket = (SSLServerSocket) sslSrvFact.createServerSocket(port)) {
+        try (SSLServerSocket serverSocket = (SSLServerSocket) sslSrvFact.createServerSocket(port)) {
 
             System.out.println("Server is listening on port " + port);
 

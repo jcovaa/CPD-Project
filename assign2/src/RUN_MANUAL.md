@@ -87,4 +87,3 @@ export JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=certs/client-truststore.p12
 ```
 
 Then run the same `java -cp ...` commands without the `-D` flags.
-

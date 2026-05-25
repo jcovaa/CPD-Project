@@ -63,4 +63,3 @@ client: build
 
 clean-certs:
 	rm -f certs/server.p12 certs/server.crt certs/client-truststore.p12
-
