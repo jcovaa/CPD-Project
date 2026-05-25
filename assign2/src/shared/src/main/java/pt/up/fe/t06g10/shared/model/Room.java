@@ -1,6 +1,7 @@
 package pt.up.fe.t06g10.shared.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Room {
@@ -19,7 +20,9 @@ public class Room {
     }
 
     public List<Message> getMessages() {
-        return messages;
+        synchronized (messages) {
+            return new ArrayList<>(messages);
+        }
     }
 
     public List<String> getActiveUsers() {
@@ -41,6 +44,21 @@ public class Room {
     }
 
     public void addMessage(Message message) {
-        messages.add(message);
+        addMessage(message, true);
+    }
+
+    public void addMessage(Message message, boolean notify) {
+        List<Message> snapshot;
+        synchronized (messages) {
+            messages.add(message);
+            snapshot = new ArrayList<>(messages);
+        }
+        if (notify) {
+            onMessageAdded(Collections.unmodifiableList(snapshot), message);
+        }
+    }
+
+    protected void onMessageAdded(List<Message> historySnapshot, Message addedMessage) {
+        // no-op in base class
     }
 }

@@ -1,5 +1,6 @@
 package pt.up.fe.t06g10.server.room;
 
+import pt.up.fe.t06g10.server.ai.AiService;
 import pt.up.fe.t06g10.shared.model.Room;
 import pt.up.fe.t06g10.shared.model.Message;
 import pt.up.fe.t06g10.shared.util.ThreadSafeMap;
@@ -10,9 +11,13 @@ import java.util.List;
 
 public class RoomManager {
     private final ThreadSafeMap<String, Room> activeRooms;
+    private final SessionManager sessionManager;
+    private final AiService aiService;
 
-    public RoomManager() {
+    public RoomManager(SessionManager sessionManager, AiService aiService) {
         this.activeRooms = new ThreadSafeMap<>();
+        this.sessionManager = sessionManager;
+        this.aiService = aiService;
     }
 
     public boolean roomExists(String roomName) {
@@ -20,9 +25,17 @@ public class RoomManager {
     }
 
     public void createRoom(String roomName) {
+        createRoom(roomName, null);
+    }
+
+    public void createRoom(String roomName, String prompt) {
         Room existing = activeRooms.get(roomName);
         if (existing == null) {
-            activeRooms.put(roomName, new Room(roomName));
+            if (prompt != null && !prompt.isBlank()) {
+                activeRooms.put(roomName, new AiRoom(roomName, prompt, aiService, sessionManager, this));
+            } else {
+                activeRooms.put(roomName, new Room(roomName));
+            }
         }
     }
 
@@ -55,10 +68,14 @@ public class RoomManager {
     }
 
     public Message addMessage(String roomName, String sender, String content) {
+        return addMessage(roomName, sender, content, true);
+    }
+
+    public Message addMessage(String roomName, String sender, String content, boolean notify) {
         Room room = activeRooms.get(roomName);
         if (room == null) return null;
         Message message = new Message(sender, content, roomName);
-        room.addMessage(message);
+        room.addMessage(message, notify);
         return message;
     }
 

@@ -266,14 +266,16 @@ public class ConnectionHandler implements Runnable {
     }
 
     private String handleCreateRoom(String args) {
-        String roomName = args == null ? "" : args.trim().split("\\s+", 2)[0];
+        String[] parts = args == null ? new String[0] : args.trim().split("\\s+", 2);
+        String roomName = parts.length > 0 ? parts[0] : "";
         if (roomName.isEmpty()) {
             return Protocol.BAD_REQUEST + " Usage: CREATE_ROOM <roomName> [prompt]";
         }
         if (roomManager.roomExists(roomName)) {
             return Protocol.BAD_REQUEST + " Room already exists";
         }
-        roomManager.createRoom(roomName);
+        String prompt = parts.length > 1 ? parts[1] : null;
+        roomManager.createRoom(roomName, prompt);
         return Protocol.OK + " Room created";
     }
 
