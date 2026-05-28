@@ -19,6 +19,7 @@ public class Protocol {
         CREATE_ROOM("roomName", "[prompt]"),
         LEAVE_ROOM(""),
         SEND("message"),
+        SEND_AI("message"),
         MESSAGE("roomName", "content"),
         BOT("room", "prompt", "context"),
         HISTORY("roomName", "[count]"),

@@ -39,6 +39,7 @@ public class RoomManager {
         this.sessionManager = sessionManager;
         this.aiService = aiService;
         this.botName = DEFAULT_BOT_NAME;
+        loadAiPrompts();
         ensureBotUser();
     }
 
@@ -51,9 +52,10 @@ public class RoomManager {
     }
 
     public void createRoom(String roomName, String prompt) {
-        roomRepository.saveIfNotExists(new RoomEntity(roomName));
-        if (prompt != null && !prompt.isBlank()) {
-            aiRoomPrompts.put(roomName, prompt.trim());
+        String normalizedPrompt = normalizePrompt(prompt);
+        roomRepository.saveIfNotExists(new RoomEntity(roomName, normalizedPrompt));
+        if (normalizedPrompt != null) {
+            aiRoomPrompts.put(roomName, normalizedPrompt);
         }
     }
 
@@ -96,25 +98,39 @@ public class RoomManager {
     }
 
     public Message addMessage(String roomName, String sender, String content) {
-        return addMessage(roomName, sender, content, true);
-    }
-
-    public Message addMessage(String roomName, String sender, String content, boolean notify) {
         Optional<RoomEntity> room = roomRepository.findByName(roomName);
         Optional<UserEntity> user = userRepository.findByUsername(sender);
         if (room.isEmpty() || user.isEmpty()) {
             return null;
         }
 
-        MessageEntity entity = new MessageEntity(room.get(), user.get(), content);
-        messageRepository.save(entity);
-        Message message = new Message(sender, content, roomName, entity.getCreatedAt());
+        return saveMessage(room.get(), user.get(), content);
+    }
 
-        if (notify) {
-            maybeTriggerAi(room.get(), message);
+    public boolean hasAiPrompt(String roomName) {
+        return aiRoomPrompts.containsKey(roomName);
+    }
+
+    public void triggerAiReply(String roomName) {
+        String prompt = aiRoomPrompts.get(roomName);
+        if (prompt == null) {
+            return;
+        }
+        Optional<RoomEntity> room = roomRepository.findByName(roomName);
+        if (room.isEmpty()) {
+            return;
         }
 
-        return message;
+        Thread.ofVirtual().start(() -> {
+            try {
+                List<Message> history = buildAiHistory(room.get());
+                String botReply = aiService.query(prompt, history, botName);
+                saveBotMessage(room.get(), botReply);
+                sessionManager.broadcastToRoom(roomName, botName + ": " + botReply);
+            } catch (Exception e) {
+                sessionManager.broadcastToRoom(roomName, botName + ": [error: " + e.getMessage() + "]");
+            }
+        });
     }
 
     public List<Message> getHistory(String roomName, int count) {
@@ -133,24 +149,6 @@ public class RoomManager {
         return messages;
     }
 
-    private void maybeTriggerAi(RoomEntity room, Message addedMessage) {
-        String prompt = aiRoomPrompts.get(room.getName());
-        if (prompt == null || addedMessage.getSender().equalsIgnoreCase(botName)) {
-            return;
-        }
-
-        Thread.ofVirtual().start(() -> {
-            try {
-                List<Message> history = buildAiHistory(room);
-                String botReply = aiService.query(prompt, history, botName);
-                addMessage(room.getName(), botName, botReply, false);
-                sessionManager.broadcastToRoom(room.getName(), botName + ": " + botReply);
-            } catch (Exception e) {
-                sessionManager.broadcastToRoom(room.getName(), botName + ": [error: " + e.getMessage() + "]");
-            }
-        });
-    }
-
     private List<Message> buildAiHistory(RoomEntity room) {
         List<MessageEntity> entities = messageRepository.findRecentByRoom(room, MAX_AI_HISTORY);
         List<Message> history = new ArrayList<>(entities.size());
@@ -160,6 +158,41 @@ public class RoomManager {
             history.add(new Message(sender, entity.getContent(), room.getName(), entity.getCreatedAt()));
         }
         return history;
+    }
+
+    private String normalizePrompt(String prompt) {
+        if (prompt == null) {
+            return null;
+        }
+        String trimmed = prompt.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void loadAiPrompts() {
+        for (RoomEntity room : roomRepository.findAllWithPrompt()) {
+            String prompt = normalizePrompt(room.getPrompt());
+            if (prompt != null) {
+                aiRoomPrompts.put(room.getName(), prompt);
+            }
+        }
+    }
+
+    private Message saveMessage(RoomEntity room, UserEntity user, String content) {
+        MessageEntity entity = new MessageEntity(room, user, content);
+        messageRepository.save(entity);
+        return new Message(user.getUsername(), content, room.getName(), entity.getCreatedAt());
+    }
+
+    private void saveBotMessage(RoomEntity room, String content) {
+        Optional<UserEntity> botUser = userRepository.findByUsername(botName);
+        if (botUser.isEmpty()) {
+            ensureBotUser();
+            botUser = userRepository.findByUsername(botName);
+            if (botUser.isEmpty()) {
+                return;
+            }
+        }
+        saveMessage(room, botUser.get(), content);
     }
 
     private void ensureBotUser() {

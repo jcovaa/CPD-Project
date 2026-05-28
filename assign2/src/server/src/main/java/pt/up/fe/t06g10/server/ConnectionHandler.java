@@ -128,6 +128,7 @@ public class ConnectionHandler implements Runnable {
                 case "JOIN_ROOM" -> handleJoinRoom(args);
                 case "LEAVE_ROOM" -> handleLeaveRoom();
                 case "SEND" -> handleSend(args);
+                case "SEND_AI" -> handleSendAi(args);
                 case "HISTORY" -> handleHistory(args);
                 case "HELP" -> handleHelp();
                 case "QUIT" -> handleQuit();
@@ -339,6 +340,30 @@ public class ConnectionHandler implements Runnable {
         return null;
     }
 
+    private String handleSendAi(String args) {
+        if (currentToken == null) {
+            return Protocol.UNAUTHORIZED + " Authentication required";
+        }
+        String roomName = sessionManager.getUserRoom(currentToken);
+        if (roomName == null) {
+            return Protocol.BAD_REQUEST + " Join a room first";
+        }
+        if (!roomManager.hasAiPrompt(roomName)) {
+            return Protocol.BAD_REQUEST + " Room is not AI-enabled";
+        }
+        String content = args == null ? "" : args.trim();
+        if (content.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: SEND_AI <message>";
+        }
+        Message message = roomManager.addMessage(roomName, currentUsername, content);
+        if (message == null) {
+            return Protocol.NOT_FOUND + " Room not found";
+        }
+        sessionManager.broadcastToRoom(roomName, currentUsername + ": " + content);
+        roomManager.triggerAiReply(roomName);
+        return null;
+    }
+
     private String handleHistory(String args) {
         String[] parts = args == null ? new String[0] : args.trim().split("\\s+", 2);
         if (parts.length == 0 || parts[0].isEmpty()) {
@@ -383,6 +408,7 @@ public class ConnectionHandler implements Runnable {
                   JOIN_ROOM <roomName>              - Join the specified room
                   LEAVE_ROOM                        - Leave the current room
                   SEND <message>                    - Send a message to the current room
+                  SEND_AI <message>                 - Send a message that prompts the bot to answer
                   HISTORY <roomName> [count]        - Show recent messages from a room
                   HELP                              - Show this help text
                   QUIT                              - Disconnect
