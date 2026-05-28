@@ -28,7 +28,21 @@ Create the environment file:
 cp .env.example .env
 ```
 
-### 2. TLS setup (one-time)
+### 2. Start Ollama
+
+If you want to create ai rooms.
+
+```bash
+docker compose --profile cpu up -d
+# Profile can be nvidia or amd
+```
+
+Pull the model:
+```bash
+docker exec -it ollama ollama pull llama3
+```
+
+### 3. TLS setup (one-time)
 
 ```bash
 cd src
@@ -37,7 +51,7 @@ make tls
 
 This creates `certs/server.p12`, `certs/server.crt`, and `certs/client-truststore.p12`.
 
-### 3. Quickstart (Makefile)
+### 4. Quickstart (Makefile)
 
 ```bash
 cd src
