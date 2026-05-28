@@ -1,4 +1,4 @@
-package pt.up.fe.t06g10.shared.util;
+package pt.up.fe.t06g10.server.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

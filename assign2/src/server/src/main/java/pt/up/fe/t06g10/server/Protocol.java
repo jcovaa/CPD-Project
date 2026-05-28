@@ -1,4 +1,4 @@
-package pt.up.fe.t06g10.shared;
+package pt.up.fe.t06g10.server;
 
 public class Protocol {
     public static final String OK = "200";

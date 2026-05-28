@@ -1,6 +1,6 @@
 package pt.up.fe.t06g10.server.ai;
 
-import pt.up.fe.t06g10.shared.model.Message;
+import pt.up.fe.t06g10.server.model.Message;
 
 import java.io.IOException;
 import java.net.URI;

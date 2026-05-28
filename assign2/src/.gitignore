@@ -42,3 +42,6 @@ bin/
 ### Certs ###
 *.p12
 *.jks
+
+### Environment ###
+.env
