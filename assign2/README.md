@@ -13,13 +13,14 @@
 - Docker (for PostgreSQL and Ollama)
 - `make` (optional, simplifies commands)
 
-### 1. Database
+### 1. Database and Ollama
 
 Start PostgreSQL:
 
 ```bash
 cd src
-docker compose up -d
+docker compose --profile cpu up -d
+# Profile can be `nvidia` or `amd`
 ```
 
 Create the environment file:
@@ -28,18 +29,19 @@ Create the environment file:
 cp .env.example .env
 ```
 
-### 2. Start Ollama
-
-If you want to create ai rooms.
-
-```bash
-docker compose --profile cpu up -d
-# Profile can be nvidia or amd
-```
-
-Pull the model:
+Pull the model (only one time):
 ```bash
 docker exec -it ollama ollama pull llama3
+```
+
+Check if Ollama up:
+```
+curl http://localhost:11434/api/tags
+```
+
+Or with docker:
+```
+docker ps | grep ollama
 ```
 
 ### 3. TLS setup (one-time)
