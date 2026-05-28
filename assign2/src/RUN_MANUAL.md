@@ -112,3 +112,17 @@ export JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=certs/client-truststore.p12
 ```
 
 Then run the same `java -cp ...` commands without the `-D` flags.
+
+## Check postgres database
+
+Use psql inside the container:
+
+```bash
+docker exec -it <container-name> psql -U <user> -d chatdb
+```
+
+See tables:
+
+```bash
+\dt
+```

@@ -383,8 +383,6 @@ public class ConnectionHandler implements Runnable {
                   JOIN_ROOM <roomName>              - Join the specified room
                   LEAVE_ROOM                        - Leave the current room
                   SEND <message>                    - Send a message to the current room
-                  MESSAGE <roomName> <content>      - Send a message to a specific room
-                  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room
                   HISTORY <roomName> [count]        - Show recent messages from a room
                   HELP                              - Show this help text
                   QUIT                              - Disconnect
