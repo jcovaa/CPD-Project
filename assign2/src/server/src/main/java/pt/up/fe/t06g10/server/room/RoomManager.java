@@ -108,7 +108,19 @@ public class RoomManager {
     }
 
     public boolean hasAiPrompt(String roomName) {
-        return aiRoomPrompts.containsKey(roomName);
+        if (aiRoomPrompts.containsKey(roomName)) {
+            return true;
+        }
+        Optional<RoomEntity> room = roomRepository.findByName(roomName);
+        if (room.isEmpty()) {
+            return false;
+        }
+        String prompt = normalizePrompt(room.get().getPrompt());
+        if (prompt == null) {
+            return false;
+        }
+        aiRoomPrompts.put(roomName, prompt);
+        return true;
     }
 
     public void triggerAiReply(String roomName) {
