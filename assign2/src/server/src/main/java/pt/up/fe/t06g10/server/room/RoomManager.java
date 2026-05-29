@@ -1,29 +1,43 @@
 package pt.up.fe.t06g10.server.room;
 
+import pt.up.fe.t06g10.server.ai.AiService;
 import pt.up.fe.t06g10.server.entity.MessageEntity;
 import pt.up.fe.t06g10.server.entity.RoomEntity;
 import pt.up.fe.t06g10.server.entity.UserEntity;
+import pt.up.fe.t06g10.server.model.Message;
 import pt.up.fe.t06g10.server.repository.MessageRepository;
 import pt.up.fe.t06g10.server.repository.RoomMemberRepository;
 import pt.up.fe.t06g10.server.repository.RoomRepository;
 import pt.up.fe.t06g10.server.repository.UserRepository;
-import pt.up.fe.t06g10.server.model.Message;
+import pt.up.fe.t06g10.server.util.PasswordUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class RoomManager {
+    private static final String DEFAULT_BOT_NAME = "Bot";
+    private static final int MAX_AI_HISTORY = 50;
+
     private final RoomRepository roomRepository;
     private final RoomMemberRepository roomMemberRepository;
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final SessionManager sessionManager;
+    private final AiService aiService;
+    private final String botName;
 
-    public RoomManager(RoomRepository roomRepository, RoomMemberRepository roomMemberRepository, MessageRepository messageRepository, UserRepository userRepository) {
+    public RoomManager(RoomRepository roomRepository, RoomMemberRepository roomMemberRepository, MessageRepository messageRepository, UserRepository userRepository, SessionManager sessionManager, AiService aiService) {
         this.roomRepository = roomRepository;
         this.roomMemberRepository = roomMemberRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.sessionManager = sessionManager;
+        this.aiService = aiService;
+        this.botName = DEFAULT_BOT_NAME;
+        loadAiPrompts();
+        ensureBotUser();
     }
 
     public boolean roomExists(String roomName) {
@@ -31,7 +45,12 @@ public class RoomManager {
     }
 
     public void createRoom(String roomName) {
-        roomRepository.saveIfNotExists(new RoomEntity(roomName));
+        createRoom(roomName, null);
+    }
+
+    public void createRoom(String roomName, String prompt) {
+        String normalizedPrompt = normalizePrompt(prompt);
+        roomRepository.saveIfNotExists(new RoomEntity(roomName, normalizedPrompt));
     }
 
     public List<String> listRoomNames() {
@@ -79,9 +98,35 @@ public class RoomManager {
             return null;
         }
 
-        MessageEntity entity = new MessageEntity(room.get(), user.get(), content);
-        messageRepository.save(entity);
-        return new Message(sender, content, roomName, entity.getCreatedAt());
+        return saveMessage(room.get(), user.get(), content);
+    }
+
+    public boolean hasAiPrompt(String roomName) {
+        Optional<RoomEntity> room = roomRepository.findByName(roomName);
+        return room.filter(roomEntity -> getAiPrompt(roomEntity) != null).isPresent();
+    }
+
+    public void triggerAiReply(String roomName) {
+        Optional<RoomEntity> room = roomRepository.findByName(roomName);
+        if (room.isEmpty()) {
+            return;
+        }
+
+        String prompt = getAiPrompt(room.get());
+        if (prompt == null) {
+            return;
+        }
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                List<Message> history = buildAiHistory(room.get());
+                String botReply = aiService.query(prompt, history, botName);
+                saveBotMessage(room.get(), botReply);
+                sessionManager.broadcastToRoom(roomName, botName + ": " + botReply);
+            } catch (Exception e) {
+                sessionManager.broadcastToRoom(roomName, botName + ": [error: " + e.getMessage() + "]");
+            }
+        });
     }
 
     public List<Message> getHistory(String roomName, int count) {
@@ -98,5 +143,66 @@ public class RoomManager {
             messages.add(new Message(sender, entity.getContent(), roomName, entity.getCreatedAt()));
         }
         return messages;
+    }
+
+    private List<Message> buildAiHistory(RoomEntity room) {
+        List<MessageEntity> entities = messageRepository.findRecentByRoom(room, MAX_AI_HISTORY);
+        List<Message> history = new ArrayList<>(entities.size());
+        for (int i = entities.size() - 1; i >= 0; i--) {
+            MessageEntity entity = entities.get(i);
+            String sender = entity.getSender().getUsername();
+            history.add(new Message(sender, entity.getContent(), room.getName(), entity.getCreatedAt()));
+        }
+        return history;
+    }
+
+    private String normalizePrompt(String prompt) {
+        if (prompt == null) {
+            return null;
+        }
+        String trimmed = prompt.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void loadAiPrompts() {
+        for (RoomEntity room : roomRepository.findAllWithPrompt()) {
+            getAiPrompt(room);
+        }
+    }
+
+    private Message saveMessage(RoomEntity room, UserEntity user, String content) {
+        try {
+            MessageEntity entity = new MessageEntity(room, user, content);
+            messageRepository.save(entity);
+            return new Message(user.getUsername(), content, room.getName(), entity.getCreatedAt());
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Failed to save message", e);
+        }
+    }
+
+    private String getAiPrompt(RoomEntity room) {
+        return normalizePrompt(room.getPrompt());
+    }
+
+    private void saveBotMessage(RoomEntity room, String content) {
+        Optional<UserEntity> botUser = userRepository.findByUsername(botName);
+        if (botUser.isEmpty()) {
+            ensureBotUser();
+            botUser = userRepository.findByUsername(botName);
+            if (botUser.isEmpty()) {
+                return;
+            }
+        }
+        saveMessage(room, botUser.get(), content);
+    }
+
+    private void ensureBotUser() {
+        if (userRepository.existsByUsername(botName)) {
+            return;
+        }
+        String salt = PasswordUtils.generateSalt();
+        String password = UUID.randomUUID().toString();
+        String hash = PasswordUtils.hash(password, salt);
+        userRepository.save(new UserEntity(botName, hash, salt));
     }
 }

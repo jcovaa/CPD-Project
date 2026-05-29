@@ -24,11 +24,19 @@ public class RoomEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "prompt", columnDefinition = "TEXT")
+    private String prompt;
+
     protected RoomEntity() {
     }
 
     public RoomEntity(String name) {
         this.name = name;
+    }
+
+    public RoomEntity(String name, String prompt) {
+        this.name = name;
+        this.prompt = prompt;
     }
 
     @PrePersist
@@ -48,5 +56,9 @@ public class RoomEntity {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getPrompt() {
+        return prompt;
     }
 }

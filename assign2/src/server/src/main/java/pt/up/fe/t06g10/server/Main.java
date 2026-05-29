@@ -1,5 +1,6 @@
 package pt.up.fe.t06g10.server;
 
+import pt.up.fe.t06g10.server.ai.AiService;
 import pt.up.fe.t06g10.server.auth.AuthService;
 import pt.up.fe.t06g10.server.auth.TokenService;
 import pt.up.fe.t06g10.server.database.EntityManagerFactoryProvider;
@@ -44,7 +45,8 @@ public class Main {
         RoomMemberRepository roomMemberRepository = new RoomMemberRepository();
         MessageRepository messageRepository = new MessageRepository();
         SessionManager sessionManager = new SessionManager();
-        RoomManager roomManager = new RoomManager(roomRepository, roomMemberRepository, messageRepository, userRepository);
+        AiService aiService = new AiService();
+        RoomManager roomManager = new RoomManager(roomRepository, roomMemberRepository, messageRepository, userRepository, sessionManager, aiService);
 
         return new ChatServer(port, authService, tokenService, sessionManager, roomManager);
     }

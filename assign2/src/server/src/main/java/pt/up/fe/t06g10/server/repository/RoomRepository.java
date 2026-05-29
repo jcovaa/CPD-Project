@@ -23,6 +23,12 @@ public class RoomRepository {
         }
     }
 
+    public List<RoomEntity> findAllWithPrompt() {
+        try (Session session = EntityManagerFactoryProvider.openSession()) {
+            return session.createQuery("from RoomEntity where prompt is not null and prompt <> ''", RoomEntity.class).list();
+        }
+    }
+
     public boolean existsByName(String name) {
         try (Session session = EntityManagerFactoryProvider.openSession()) {
             Long count = session.createQuery("select count(r) from RoomEntity r where r.name = :name", Long.class).setParameter("name", name).uniqueResult();

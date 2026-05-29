@@ -5,7 +5,6 @@ import pt.up.fe.t06g10.server.auth.TokenService;
 import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
-import pt.up.fe.t06g10.server.Protocol;
 import pt.up.fe.t06g10.server.model.Message;
 import pt.up.fe.t06g10.server.model.Session;
 
@@ -128,6 +127,7 @@ public class ConnectionHandler implements Runnable {
                 case "JOIN_ROOM" -> handleJoinRoom(args);
                 case "LEAVE_ROOM" -> handleLeaveRoom();
                 case "SEND" -> handleSend(args);
+                case "SEND_AI" -> handleSendAi(args);
                 case "HISTORY" -> handleHistory(args);
                 case "HELP" -> handleHelp();
                 case "QUIT" -> handleQuit();
@@ -266,14 +266,16 @@ public class ConnectionHandler implements Runnable {
     }
 
     private String handleCreateRoom(String args) {
-        String roomName = args == null ? "" : args.trim().split("\\s+", 2)[0];
+        String[] parts = args == null ? new String[0] : args.trim().split("\\s+", 2);
+        String roomName = parts.length > 0 ? parts[0] : "";
         if (roomName.isEmpty()) {
             return Protocol.BAD_REQUEST + " Usage: CREATE_ROOM <roomName> [prompt]";
         }
         if (roomManager.roomExists(roomName)) {
             return Protocol.BAD_REQUEST + " Room already exists";
         }
-        roomManager.createRoom(roomName);
+        String prompt = parts.length > 1 ? parts[1] : null;
+        roomManager.createRoom(roomName, prompt);
         return Protocol.OK + " Room created";
     }
 
@@ -329,11 +331,46 @@ public class ConnectionHandler implements Runnable {
         if (content.isEmpty()) {
             return Protocol.BAD_REQUEST + " Usage: SEND <message>";
         }
-        Message message = roomManager.addMessage(roomName, currentUsername, content);
+        Message message;
+        try {
+            message = roomManager.addMessage(roomName, currentUsername, content);
+        } catch (IllegalStateException e) {
+            return Protocol.INTERNAL_ERROR + " " + e.getMessage();
+        }
         if (message == null) {
             return Protocol.NOT_FOUND + " Room not found";
         }
         sessionManager.broadcastToRoom(roomName, currentUsername + ": " + content);
+        return null;
+    }
+
+    private String handleSendAi(String args) {
+        if (currentToken == null) {
+            return Protocol.UNAUTHORIZED + " Authentication required";
+        }
+        String roomName = sessionManager.getUserRoom(currentToken);
+        if (roomName == null) {
+            return Protocol.BAD_REQUEST + " Join a room first";
+        }
+        if (!roomManager.hasAiPrompt(roomName)) {
+            return Protocol.BAD_REQUEST + " Room is not AI-enabled";
+        }
+        String content = args == null ? "" : args.trim();
+        if (content.isEmpty()) {
+            return Protocol.BAD_REQUEST + " Usage: SEND_AI <message>";
+        }
+        Message message;
+        try {
+            message = roomManager.addMessage(roomName, currentUsername, content);
+        } catch (IllegalStateException e) {
+            return Protocol.INTERNAL_ERROR + " " + e.getMessage();
+        }
+        if (message == null) {
+            return Protocol.NOT_FOUND + " Room not found";
+        }
+
+        sessionManager.broadcastToRoom(roomName, currentUsername + ": " + content);
+        roomManager.triggerAiReply(roomName);
         return null;
     }
 
@@ -372,17 +409,16 @@ public class ConnectionHandler implements Runnable {
                 
                 Available commands:
                   AUTH <username> <password>        - Login with username and password
-                  REGISTER <username> <password>    - Create a new user account
                   TOKEN <token>                     - Authenticate using a session token
-                  RECONNECT <token>                  - Reconnect an existing session
+                  RECONNECT <token>                 - Reconnect an existing session
+                  REGISTER <username> <password>    - Create a new user account
                   LOGOUT                            - Log out of the current session
                   LIST_ROOMS                        - List available chat rooms
                   CREATE_ROOM <roomName> [prompt]   - Create a new room
                   JOIN_ROOM <roomName>              - Join the specified room
                   LEAVE_ROOM                        - Leave the current room
                   SEND <message>                    - Send a message to the current room
-                  MESSAGE <roomName> <content>      - Send a message to a specific room
-                  BOT <room> <prompt> <context>     - Ask the bot to post a message to a room
+                  SEND_AI <message>                 - Send a message that prompts the bot to answer
                   HISTORY <roomName> [count]        - Show recent messages from a room
                   HELP                              - Show this help text
                   QUIT                              - Disconnect
