@@ -29,7 +29,7 @@ public class MessageEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity sender;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -24,7 +24,7 @@ public class RoomEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "prompt", length = 2048)
+    @Column(name = "prompt", columnDefinition = "TEXT")
     private String prompt;
 
     protected RoomEntity() {
