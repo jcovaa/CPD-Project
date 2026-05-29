@@ -1,6 +1,7 @@
 package pt.up.fe.t06g10.server.ai;
 
 import pt.up.fe.t06g10.server.model.Message;
+import pt.up.fe.t06g10.server.util.EnvUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -11,10 +12,16 @@ import java.time.Duration;
 import java.util.List;
 
 public class AiService {
-    private static final String OLLAMA_URL = "http://localhost:11434/api/chat";
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(5))
             .build();
+    private final String ollamaUrl;
+    private final String model;
+
+    public AiService() {
+        this.ollamaUrl = EnvUtils.getRequiredEnv("AI_OLLAMA_URL");
+        this.model = EnvUtils.getRequiredEnv("AI_MODEL");
+    }
 
     public String query(String systemPrompt, List<Message> history, String botName) throws IOException, InterruptedException {
         StringBuilder messages = new StringBuilder("[");
@@ -31,10 +38,10 @@ public class AiService {
         }
         messages.append("]");
 
-        String body = "{\"model\":\"llama3\",\"messages\":" + messages + ",\"stream\":false}";
+        String body = "{\"model\":" + jsonString(model) + ",\"messages\":" + messages + ",\"stream\":false}";
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(OLLAMA_URL))
+                .uri(URI.create(ollamaUrl))
                 .header("Content-Type", "application/json")
                 .timeout(Duration.ofSeconds(30))
                 .POST(HttpRequest.BodyPublishers.ofString(body))
