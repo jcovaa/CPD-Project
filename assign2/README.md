@@ -29,6 +29,13 @@ Create the environment file:
 cp .env.example .env
 ```
 
+Set AI configuration in `.env`:
+
+```
+AI_OLLAMA_URL=http://localhost:11434/api/chat
+AI_MODEL=llama3
+```
+
 Pull the model (only one time):
 ```bash
 docker exec -it ollama ollama pull llama3

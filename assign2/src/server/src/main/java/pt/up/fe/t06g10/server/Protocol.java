@@ -20,8 +20,6 @@ public class Protocol {
         LEAVE_ROOM(""),
         SEND("message"),
         SEND_AI("message"),
-        MESSAGE("roomName", "content"),
-        BOT("room", "prompt", "context"),
         HISTORY("roomName", "[count]"),
         HELP(""),
         QUIT("");
@@ -38,7 +36,6 @@ public class Protocol {
         LIST_ROOMS_RESPONSE("code", "rooms..."),
         JOIN_ROOM_RESPONSE("code", "message"),
         CREATE_ROOM_RESPONSE("code", "message"),
-        MESSAGE("sender", "content"),
         ROOM_HISTORY("code", "messages..."),
         ERROR("code", "message"),
         OK("code", "message");
