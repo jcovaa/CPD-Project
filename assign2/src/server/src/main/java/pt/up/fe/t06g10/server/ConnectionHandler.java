@@ -5,7 +5,6 @@ import pt.up.fe.t06g10.server.auth.TokenService;
 import pt.up.fe.t06g10.server.connection.ClientWriter;
 import pt.up.fe.t06g10.server.room.RoomManager;
 import pt.up.fe.t06g10.server.room.SessionManager;
-import pt.up.fe.t06g10.server.Protocol;
 import pt.up.fe.t06g10.server.model.Message;
 import pt.up.fe.t06g10.server.model.Session;
 
@@ -359,6 +358,7 @@ public class ConnectionHandler implements Runnable {
         if (message == null) {
             return Protocol.NOT_FOUND + " Room not found";
         }
+
         sessionManager.broadcastToRoom(roomName, currentUsername + ": " + content);
         roomManager.triggerAiReply(roomName);
         return null;
@@ -399,9 +399,9 @@ public class ConnectionHandler implements Runnable {
                 
                 Available commands:
                   AUTH <username> <password>        - Login with username and password
-                  REGISTER <username> <password>    - Create a new user account
                   TOKEN <token>                     - Authenticate using a session token
-                  RECONNECT <token>                  - Reconnect an existing session
+                  RECONNECT <token>                 - Reconnect an existing session
+                  REGISTER <username> <password>    - Create a new user account
                   LOGOUT                            - Log out of the current session
                   LIST_ROOMS                        - List available chat rooms
                   CREATE_ROOM <roomName> [prompt]   - Create a new room
