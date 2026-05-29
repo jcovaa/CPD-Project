@@ -108,28 +108,23 @@ public class RoomManager {
     }
 
     public boolean hasAiPrompt(String roomName) {
-        if (aiRoomPrompts.containsKey(roomName)) {
-            return true;
-        }
         Optional<RoomEntity> room = roomRepository.findByName(roomName);
         if (room.isEmpty()) {
+            aiRoomPrompts.remove(roomName);
             return false;
         }
-        String prompt = normalizePrompt(room.get().getPrompt());
-        if (prompt == null) {
-            return false;
-        }
-        aiRoomPrompts.put(roomName, prompt);
-        return true;
+        return getAiPrompt(room.get()) != null;
     }
 
     public void triggerAiReply(String roomName) {
-        String prompt = aiRoomPrompts.get(roomName);
-        if (prompt == null) {
-            return;
-        }
         Optional<RoomEntity> room = roomRepository.findByName(roomName);
         if (room.isEmpty()) {
+            aiRoomPrompts.remove(roomName);
+            return;
+        }
+
+        String prompt = getAiPrompt(room.get());
+        if (prompt == null) {
             return;
         }
 
@@ -182,17 +177,28 @@ public class RoomManager {
 
     private void loadAiPrompts() {
         for (RoomEntity room : roomRepository.findAllWithPrompt()) {
-            String prompt = normalizePrompt(room.getPrompt());
-            if (prompt != null) {
-                aiRoomPrompts.put(room.getName(), prompt);
-            }
+            getAiPrompt(room);
         }
     }
 
     private Message saveMessage(RoomEntity room, UserEntity user, String content) {
-        MessageEntity entity = new MessageEntity(room, user, content);
-        messageRepository.save(entity);
-        return new Message(user.getUsername(), content, room.getName(), entity.getCreatedAt());
+        try {
+            MessageEntity entity = new MessageEntity(room, user, content);
+            messageRepository.save(entity);
+            return new Message(user.getUsername(), content, room.getName(), entity.getCreatedAt());
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Failed to save message", e);
+        }
+    }
+
+    private String getAiPrompt(RoomEntity room) {
+        String prompt = normalizePrompt(room.getPrompt());
+        if (prompt == null) {
+            aiRoomPrompts.remove(room.getName());
+            return null;
+        }
+        aiRoomPrompts.put(room.getName(), prompt);
+        return prompt;
     }
 
     private void saveBotMessage(RoomEntity room, String content) {

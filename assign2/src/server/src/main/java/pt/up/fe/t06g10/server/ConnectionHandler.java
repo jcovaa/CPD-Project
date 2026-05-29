@@ -331,7 +331,12 @@ public class ConnectionHandler implements Runnable {
         if (content.isEmpty()) {
             return Protocol.BAD_REQUEST + " Usage: SEND <message>";
         }
-        Message message = roomManager.addMessage(roomName, currentUsername, content);
+        Message message;
+        try {
+            message = roomManager.addMessage(roomName, currentUsername, content);
+        } catch (IllegalStateException e) {
+            return Protocol.INTERNAL_ERROR + " " + e.getMessage();
+        }
         if (message == null) {
             return Protocol.NOT_FOUND + " Room not found";
         }
@@ -354,7 +359,12 @@ public class ConnectionHandler implements Runnable {
         if (content.isEmpty()) {
             return Protocol.BAD_REQUEST + " Usage: SEND_AI <message>";
         }
-        Message message = roomManager.addMessage(roomName, currentUsername, content);
+        Message message;
+        try {
+            message = roomManager.addMessage(roomName, currentUsername, content);
+        } catch (IllegalStateException e) {
+            return Protocol.INTERNAL_ERROR + " " + e.getMessage();
+        }
         if (message == null) {
             return Protocol.NOT_FOUND + " Room not found";
         }
