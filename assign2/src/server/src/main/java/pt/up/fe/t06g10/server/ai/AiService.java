@@ -27,7 +27,7 @@ public class AiService {
         StringBuilder messages = new StringBuilder("[");
         messages.append("{\"role\":\"system\",\"content\":").append(jsonString(systemPrompt == null ? "" : systemPrompt)).append("}");
         for (Message m : history) {
-            boolean isAssistant = botName != null && m.getSender().equalsIgnoreCase(botName);
+            boolean isAssistant = m.getSender().equalsIgnoreCase(botName);
             String role = isAssistant ? "assistant" : "user";
             String content = isAssistant ? m.getContent() : (m.getSender() + ": " + m.getContent());
             messages.append(",{\"role\":\"")
@@ -62,7 +62,7 @@ public class AiService {
 
     private String extractContent(String json) throws IOException {
         int messageIndex = json.indexOf("\"message\"");
-        int searchFrom = messageIndex >= 0 ? messageIndex : 0;
+        int searchFrom = Math.max(messageIndex, 0);
         int contentIndex = json.indexOf("\"content\"", searchFrom);
         if (contentIndex < 0) {
             throw new IOException("Invalid AI response: missing content");

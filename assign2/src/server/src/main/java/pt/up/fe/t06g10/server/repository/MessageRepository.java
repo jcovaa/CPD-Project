@@ -9,13 +9,12 @@ import pt.up.fe.t06g10.server.entity.RoomEntity;
 import java.util.List;
 
 public class MessageRepository {
-    public MessageEntity save(MessageEntity message) {
+    public void save(MessageEntity message) {
         Transaction transaction = null;
         try (Session session = EntityManagerFactoryProvider.openSession()) {
             transaction = session.beginTransaction();
             session.persist(message);
             transaction.commit();
-            return message;
         } catch (RuntimeException e) {
             if (transaction != null) {
                 transaction.rollback();

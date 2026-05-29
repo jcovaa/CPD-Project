@@ -13,10 +13,8 @@ import pt.up.fe.t06g10.server.util.PasswordUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class RoomManager {
     private static final String DEFAULT_BOT_NAME = "Bot";
@@ -28,7 +26,6 @@ public class RoomManager {
     private final UserRepository userRepository;
     private final SessionManager sessionManager;
     private final AiService aiService;
-    private final Map<String, String> aiRoomPrompts = new ConcurrentHashMap<>();
     private final String botName;
 
     public RoomManager(RoomRepository roomRepository, RoomMemberRepository roomMemberRepository, MessageRepository messageRepository, UserRepository userRepository, SessionManager sessionManager, AiService aiService) {
@@ -54,9 +51,6 @@ public class RoomManager {
     public void createRoom(String roomName, String prompt) {
         String normalizedPrompt = normalizePrompt(prompt);
         roomRepository.saveIfNotExists(new RoomEntity(roomName, normalizedPrompt));
-        if (normalizedPrompt != null) {
-            aiRoomPrompts.put(roomName, normalizedPrompt);
-        }
     }
 
     public List<String> listRoomNames() {
@@ -109,17 +103,12 @@ public class RoomManager {
 
     public boolean hasAiPrompt(String roomName) {
         Optional<RoomEntity> room = roomRepository.findByName(roomName);
-        if (room.isEmpty()) {
-            aiRoomPrompts.remove(roomName);
-            return false;
-        }
-        return getAiPrompt(room.get()) != null;
+        return room.filter(roomEntity -> getAiPrompt(roomEntity) != null).isPresent();
     }
 
     public void triggerAiReply(String roomName) {
         Optional<RoomEntity> room = roomRepository.findByName(roomName);
         if (room.isEmpty()) {
-            aiRoomPrompts.remove(roomName);
             return;
         }
 
@@ -192,13 +181,7 @@ public class RoomManager {
     }
 
     private String getAiPrompt(RoomEntity room) {
-        String prompt = normalizePrompt(room.getPrompt());
-        if (prompt == null) {
-            aiRoomPrompts.remove(room.getName());
-            return null;
-        }
-        aiRoomPrompts.put(room.getName(), prompt);
-        return prompt;
+        return normalizePrompt(room.getPrompt());
     }
 
     private void saveBotMessage(RoomEntity room, String content) {
