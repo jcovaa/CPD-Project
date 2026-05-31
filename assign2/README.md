@@ -95,3 +95,45 @@ The `make tls` target creates these files in `certs/`:
 - `certs/client-truststore.p12` (client truststore)
 
 If you already created these, `make tls` will keep them as-is.
+
+## commands
+
+The client has several commands to interact with the server. 
+
+As a client, you can run `HELP` to see the list of commands available.
+
+```
+> HELP
+```
+
+Here is the list of commands available:
+
+1. Authentication commands
+    - REGISTER \<username> \<password> - Create a new user account
+    - AUTH \<username> \<password> - Login with username and password
+    - TOKEN \<token> - Authenticate using a session token
+    - RECONECT \<token> - Reconnect an existing session 
+    - LOGOUT - Log out of the current session
+
+2. Room commands (Needs to be Authenticated)
+    - LIST_ROOMS - List available chat rooms
+    - CREATE_ROOM \<roomName> \[prompt] - Create a new room. If prompt given, the room creates a bot with the specific prompt as context
+    - JOIN_ROOM \<roomName> - Join the specified room
+    - LEAVE_ROOM - Leave the current room
+    - HISTORY \<roomName> \[count] - Show recent messages from a room
+
+3. Message commands (Needs to be inside a room)
+    - SEND \<message> - Send a message to the current room
+    - SEND_AI \<message> - Send a message that prompts the bot to answer
+
+4. General commands
+    - HELP - Show the help text/menu
+    - QUIT - Disconnect
+
+## Authors
+
+| Name | Number |
+| ---- | ------ |
+| Constança Lemos Ferreira | 202306850 |
+| João Rodrigues Vila Cova | 202307756 |
+| Pedro Andrade de Castro | 202200044 |
