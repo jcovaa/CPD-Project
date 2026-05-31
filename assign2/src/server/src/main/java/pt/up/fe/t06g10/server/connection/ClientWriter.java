@@ -25,6 +25,8 @@ public class ClientWriter implements Runnable {
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
     private boolean queueFullNoticePending = false;
+    private long droppedMessages = 0L;
+    private long queueFullEvents = 0L;
 
     private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
     private static final String POISON_PILL = "__STOP__";
@@ -34,6 +36,8 @@ public class ClientWriter implements Runnable {
         try {
             if (queue.size() >= QUEUE_CAPACITY) {
                 queueFullNoticePending = true;
+                queueFullEvents++;
+                droppedMessages++;
                 notEmpty.signal();
                 return;
             }
@@ -106,6 +110,24 @@ public class ClientWriter implements Runnable {
         queueOffer(message);
     }
 
+    public long getDroppedMessages() {
+        lock.lock();
+        try {
+            return droppedMessages;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public long getQueueFullEvents() {
+        lock.lock();
+        try {
+            return queueFullEvents;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     @Override
     public void run() {
         try {
@@ -132,6 +154,9 @@ public class ClientWriter implements Runnable {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
+            if (droppedMessages > 0 || queueFullEvents > 0) {
+                System.err.println("[ClientWriter] queue_full_events=" + queueFullEvents + " dropped_messages=" + droppedMessages);
+            }
             out.close();
         }
     }
