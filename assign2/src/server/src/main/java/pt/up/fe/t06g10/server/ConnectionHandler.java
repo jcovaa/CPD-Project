@@ -25,13 +25,11 @@ public class ConnectionHandler implements Runnable {
     private final SessionManager sessionManager;
     private final RoomManager roomManager;
     private final ClientWriter clientWriter;
-
+    private final Runnable disconnectHandler = this::disconnect;
     private volatile ClientWriter activeWriter;
-
     private boolean authenticated = false;
     private String currentToken = null;
     private String currentUsername = null;
-    private final Runnable disconnectHandler = this::disconnect;
 
     public ConnectionHandler(Socket socket, AuthService authService, TokenService tokenService, SessionManager sessionManager, RoomManager roomManager, ClientWriter clientWriter) {
         this.socket = socket;

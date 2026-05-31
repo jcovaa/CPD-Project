@@ -4,12 +4,11 @@ import java.time.Instant;
 import java.util.UUID;
 
 public class Session {
+    private static final int DEFAULT_DURATION_MINUTES = 60;
     private final String token;
     private final String username;
     private final Instant createdAt;
     private final Instant expiresAt;
-
-    private static final int DEFAULT_DURATION_MINUTES = 60;
 
     public Session(String username) {
         this(username, DEFAULT_DURATION_MINUTES);

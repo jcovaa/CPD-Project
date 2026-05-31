@@ -8,6 +8,22 @@ public class Protocol {
     public static final String INTERNAL_ERROR = "500";
     public static final String USER_EXISTS = "409";
 
+    public static String[] parse(String line) {
+        if (line == null || line.isBlank()) return new String[0];
+        return line.trim().split("\\s+", -1);
+    }
+
+    public static boolean isValidClientCommand(String line) {
+        String[] parts = parse(line);
+        if (parts.length == 0) return false;
+        try {
+            ClientCommand.valueOf(parts[0].toUpperCase());
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public enum ClientCommand {
         AUTH("username", "password"),
         REGISTER("username", "password"),
@@ -44,22 +60,6 @@ public class Protocol {
 
         ServerResponse(String... argNames) {
             this.argNames = argNames;
-        }
-    }
-
-    public static String[] parse(String line) {
-        if (line == null || line.isBlank()) return new String[0];
-        return line.trim().split("\\s+", -1);
-    }
-
-    public static boolean isValidClientCommand(String line) {
-        String[] parts = parse(line);
-        if (parts.length == 0) return false;
-        try {
-            ClientCommand.valueOf(parts[0].toUpperCase());
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
         }
     }
 }

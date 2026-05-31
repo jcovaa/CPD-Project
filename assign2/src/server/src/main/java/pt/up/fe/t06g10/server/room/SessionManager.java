@@ -83,8 +83,8 @@ public class SessionManager {
     public static class UserSession {
         private final String token;
         private final String username;
-        private volatile String currentRoom;
         private final ClientWriter clientWriter;
+        private volatile String currentRoom;
 
         public UserSession(String token, String username, ClientWriter clientWriter) {
             this.token = token;

@@ -20,14 +20,18 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ClientWriter implements Runnable {
     private static final int QUEUE_CAPACITY = 512;
-
+    private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
+    private static final String POISON_PILL = "__STOP__";
     private final ArrayDeque<String> queue = new ArrayDeque<>(QUEUE_CAPACITY);
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
+    private final PrintWriter out;
     private boolean queueFullNoticePending = false;
+    private volatile Thread thread;
 
-    private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
-    private static final String POISON_PILL = "__STOP__";
+    public ClientWriter(Socket socket) throws IOException {
+        this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+    }
 
     private void queueOffer(String msg) {
         lock.lock();
@@ -58,13 +62,6 @@ public class ClientWriter implements Runnable {
         } finally {
             lock.unlock();
         }
-    }
-
-    private final PrintWriter out;
-    private volatile Thread thread;
-
-    public ClientWriter(Socket socket) throws IOException {
-        this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
     }
 
     public void start(String clientUserName) {
