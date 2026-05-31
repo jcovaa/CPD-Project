@@ -41,30 +41,47 @@ public class ChatClient {
     public void start() {
         SSLSocketFactory sslFact =
                 (SSLSocketFactory) SSLSocketFactory.getDefault();
-        try (SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port)) {
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
+        int retries = 3;
+        while (retries > 0) {
+            try (SSLSocket socket = (SSLSocket) sslFact.createSocket(hostname, port)) {
 
-            Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
 
-            ui.printPrompt();
-            while (true) {
-                String line = ui.readCommand();
-                if (line == null) break;
+                Thread listener = Thread.ofVirtual().start(new ServerListener(reader, ui));
 
-                line = line.trim();
-                if (line.isEmpty()) continue;
+                ui.printPrompt();
+                while (true) {
+                    String line = ui.readCommand();
+                    if (line == null) break;
 
-                writer.println(line);
-                if (line.equalsIgnoreCase("QUIT")) break;
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+
+                    writer.println(line);
+                    if (line.equalsIgnoreCase("QUIT")) break;
+                }
+
+                listener.join();
+                return;
+            } catch (IOException e) {
+                retries--;
+                if (retries > 0) {
+                    ui.printError("Connection failed, " + retries + " retries left");
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                } else {
+                    ui.printError("Client error: " + e.getMessage());
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
             }
-
-            listener.join();
-        } catch (IOException e) {
-            ui.printError("Client error: " + e.getMessage());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }
