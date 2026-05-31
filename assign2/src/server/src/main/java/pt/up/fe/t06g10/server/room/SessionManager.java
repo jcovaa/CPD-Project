@@ -93,16 +93,28 @@ public class SessionManager {
             this.clientWriter = clientWriter;
         }
 
-        public String getToken() { return token; }
+        public String getToken() {
+            return token;
+        }
 
-        public String getUsername() { return username; }
+        public String getUsername() {
+            return username;
+        }
 
-        public String getCurrentRoom() { return currentRoom; }
+        public String getCurrentRoom() {
+            return currentRoom;
+        }
 
-        public void setCurrentRoom(String r) { this.currentRoom = r; }
+        public void setCurrentRoom(String r) {
+            this.currentRoom = r;
+        }
 
-        public ClientWriter getWriter() { return clientWriter; }
+        public ClientWriter getWriter() {
+            return clientWriter;
+        }
 
-        public boolean isInRoom() { return currentRoom != null; }
+        public boolean isInRoom() {
+            return currentRoom != null;
+        }
     }
 }
