@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ClientWriter implements Runnable {
     private static final int QUEUE_CAPACITY = 512;
+    private static final long MAX_DROPPED_BEFORE_DISCONNECT = 64L;
 
     private final ArrayDeque<String> queue = new ArrayDeque<>(QUEUE_CAPACITY);
     private final ReentrantLock lock = new ReentrantLock();
@@ -27,6 +28,7 @@ public class ClientWriter implements Runnable {
     private boolean queueFullNoticePending = false;
     private long droppedMessages = 0L;
     private long queueFullEvents = 0L;
+    private volatile boolean slowClientDisconnectRequested = false;
 
     private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
     private static final String POISON_PILL = "__STOP__";
@@ -38,6 +40,9 @@ public class ClientWriter implements Runnable {
                 queueFullNoticePending = true;
                 queueFullEvents++;
                 droppedMessages++;
+                if (droppedMessages >= MAX_DROPPED_BEFORE_DISCONNECT) {
+                    slowClientDisconnectRequested = true;
+                }
                 notEmpty.signal();
                 return;
             }
@@ -66,6 +71,7 @@ public class ClientWriter implements Runnable {
 
     private volatile PrintWriter out;
     private volatile Thread thread;
+    private volatile Runnable slowClientDisconnectHandler;
 
     public ClientWriter(Socket socket) throws IOException {
         this.out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
@@ -128,6 +134,14 @@ public class ClientWriter implements Runnable {
         }
     }
 
+    public void setSlowClientDisconnectHandler(Runnable handler) {
+        this.slowClientDisconnectHandler = handler;
+    }
+
+    public boolean isSlowClientDisconnectRequested() {
+        return slowClientDisconnectRequested;
+    }
+
     @Override
     public void run() {
         try {
@@ -136,6 +150,12 @@ public class ClientWriter implements Runnable {
                 if (message.equals(POISON_PILL)) break;
 
                 if (message.equals(QUEUE_FULL_MSG)) {
+                    if (slowClientDisconnectRequested) {
+                        out.println(Protocol.INTERNAL_ERROR + " Slow client disconnected");
+                        Runnable handler = slowClientDisconnectHandler;
+                        if (handler != null) handler.run();
+                        break;
+                    }
                     out.println(Protocol.INTERNAL_ERROR + " Server busy, please try again");
                     if (out.checkError()) {
                         System.err.println("[ClientWriter] write error - socket likely closed");
