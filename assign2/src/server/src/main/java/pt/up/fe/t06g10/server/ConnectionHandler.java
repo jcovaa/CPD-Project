@@ -40,7 +40,6 @@ public class ConnectionHandler implements Runnable {
         this.sessionManager = sessionManager;
         this.roomManager = roomManager;
         this.clientWriter = clientWriter;
-        this.clientWriter.setSlowClientDisconnectHandler(this::disconnect);
     }
 
     private void send(String message) {
