@@ -130,6 +130,41 @@ Here is the list of commands available:
     - HELP - Show the help text/menu
     - QUIT - Disconnect
 
+## Implemented Features
+
+### Concurrency
+
+- Virtual threads (Java 21) to minimize thread overhead.
+    - server connection handler thread
+    - server client writer thread
+    - client listener thread
+    - shutdown hook thread at server startup
+    - thread each time SEND_AI is used
+- Custom `ThreadSafeMap\<K,V>` using `ReentrantReadWriteLock`
+- `ClientWriter` per connection with a bounded outbox queue to prevent slow clients from blocking others
+
+### User registration and Authentication
+
+- User registration and login with hashed passwords
+- Session tokens with expiration time
+- Token-based reconnection without re-entering credentials
+- `SSL sockets` instead of normal sockets for secure communications
+
+### Fault Tolerance
+
+- Client automatically retries connection up to 3 times if the server is unreachable
+- On broken TCP connection, the client reconnects using the session token
+- Server perserves user state (room, session) across disconnects
+
+### AI implementation
+
+- Special rooms with a system prompt connected to a local LLM via Ollama
+- Special command `SEND_AI` that triggers a bot response broadcast to the room 
+
+### Database
+
+- PostgreSQL for persisten storage of users, rooms, and messages
+
 ## Authors
 
 | Name | Number |
