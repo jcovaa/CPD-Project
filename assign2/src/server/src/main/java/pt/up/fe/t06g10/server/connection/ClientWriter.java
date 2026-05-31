@@ -24,6 +24,7 @@ public class ClientWriter implements Runnable {
     private final ArrayDeque<String> queue = new ArrayDeque<>(QUEUE_CAPACITY);
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition notEmpty = lock.newCondition();
+    private boolean queueFullNoticePending = false;
 
     private static final String QUEUE_FULL_MSG = "__QUEUE_FULL__";
     private static final String POISON_PILL = "__STOP__";
@@ -32,7 +33,7 @@ public class ClientWriter implements Runnable {
         lock.lock();
         try {
             if (queue.size() >= QUEUE_CAPACITY) {
-                queue.addLast(QUEUE_FULL_MSG);
+                queueFullNoticePending = true;
                 notEmpty.signal();
                 return;
             }
@@ -46,8 +47,12 @@ public class ClientWriter implements Runnable {
     private String queueTake() throws InterruptedException {
         lock.lock();
         try {
-            while (queue.isEmpty()) {
+            while (queue.isEmpty() && !queueFullNoticePending) {
                 notEmpty.await();
+            }
+            if (queueFullNoticePending) {
+                queueFullNoticePending = false;
+                return QUEUE_FULL_MSG;
             }
             return queue.removeFirst();
         } finally {
