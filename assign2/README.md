@@ -31,23 +31,26 @@ cp .env.example .env
 
 Set AI configuration in `.env`:
 
-```
+```bash
 AI_OLLAMA_URL=http://localhost:11434/api/chat
 AI_MODEL=llama3
 ```
 
 Pull the model (only one time):
+
 ```bash
 docker exec -it ollama ollama pull llama3
 ```
 
 Check if Ollama up:
-```
+
+```bash
 curl http://localhost:11434/api/tags
 ```
 
 Or with docker:
-```
+
+```bash
 docker ps | grep ollama
 ```
 
@@ -96,13 +99,13 @@ The `make tls` target creates these files in `certs/`:
 
 If you already created these, `make tls` will keep them as-is.
 
-## commands
+## Commands
 
-The client has several commands to interact with the server. 
+The client has several commands to interact with the server.
 
 As a client, you can run `HELP` to see the list of commands available.
 
-```
+```bash
 > HELP
 ```
 
@@ -112,7 +115,7 @@ Here is the list of commands available:
     - REGISTER \<username> \<password> - Create a new user account
     - AUTH \<username> \<password> - Login with username and password
     - TOKEN \<token> - Authenticate using a session token
-    - RECONECT \<token> - Reconnect an existing session 
+    - RECONECT \<token> - Reconnect an existing session
     - LOGOUT - Log out of the current session
 
 2. Room commands (Needs to be Authenticated)
@@ -135,11 +138,11 @@ Here is the list of commands available:
 ### Concurrency
 
 - Virtual threads (Java 21) to minimize thread overhead.
-    - server connection handler thread
-    - server client writer thread
-    - client listener thread
-    - shutdown hook thread at server startup
-    - thread each time SEND_AI is used
+  - server connection handler thread
+  - server client writer thread
+  - client listener thread
+  - shutdown hook thread at server startup
+  - thread each time SEND_AI is used
 - Custom `ThreadSafeMap\<K,V>` using `ReentrantReadWriteLock`
 - `ClientWriter` per connection with a bounded outbox queue to prevent slow clients from blocking others
 
@@ -159,7 +162,7 @@ Here is the list of commands available:
 ### AI implementation
 
 - Special rooms with a system prompt connected to a local LLM via Ollama
-- Special command `SEND_AI` that triggers a bot response broadcast to the room 
+- Special command `SEND_AI` that triggers a bot response broadcast to the room
 
 ### Database
 
@@ -167,7 +170,7 @@ Here is the list of commands available:
 
 ## Authors
 
-| Name | Number |
+| Name | Student Number |
 | ---- | ------ |
 | Constança Lemos Ferreira | 202306850 |
 | João Rodrigues Vila Cova | 202307756 |
